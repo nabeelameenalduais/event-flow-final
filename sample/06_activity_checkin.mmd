@@ -1,0 +1,54 @@
+---
+title: EventFlow — QR Ticket Check-in Activity
+---
+%% Evidence: src/pages/AttendanceManagement.tsx (lookupTicket:108, handleConfirmCheckIn:132, handleQrScan:159,
+%% handleCheckIn:82, handleCheckOut:94), src/components/QrScanner.tsx (html5-qrcode, manual code entry),
+%% src/services/attendanceService.ts (checkIn:24, checkOut:52, findTicketByCode:103, getAttendanceByTicket:93).
+%% Guard: page redirects unless organizerId matches profile OR role === admin (AttendanceManagement.tsx:48).
+
+flowchart TD
+    A([Organizer opens Attendance Management]) --> B{Is organizer of event\nor admin?}
+    B -- No --> C([Redirect to /dashboard/events])
+    B -- Yes --> D[Load confirmed registrations + tickets + attendance]
+
+    D --> E{How to provide\nattendee ticket?}
+    E -- "Type ticket code" --> F[Enter unique code in input]
+    E -- "Scan QR" --> G[QrScanner: html5-qrcode\ncamera facingMode environment]
+
+    F --> H[lookupTicket code]
+    G --> H
+    H --> I[findTicketByCode: query tickets\nWHERE unique_code = code\nJOIN registration status]
+    I --> J{Ticket found and\nregistration confirmed?}
+    J -- No --> K([Toast: No ticket found with that code])
+    J -- Yes --> L[getAttendanceByTicket: existing\nattendance row for this ticket?]
+
+    L --> M{Existing\nattendance?}
+    M -- "No" --> N[Show confirm dialog: Check In attendee?]
+    M -- "Yes, no check_out_time" --> O[Show confirm dialog: Check Out attendee?]
+    M -- "Yes, has check_out_time" --> P([Toast: already checked in and out])
+
+    N --> Q{Organizer confirms?}
+    Q -- Cancel --> E
+    Q -- Confirm --> R[checkIn ticket.id]
+    R --> R1[Ticket status == used?]
+    R1 -- "used" --> R2([Toast: Ticket already checked in])
+    R1 -- "valid" --> R3[Registration status confirmed?]
+    R3 -- "not confirmed" --> R4([Toast: registration not confirmed])
+    R3 -- "confirmed" --> R5[UPDATE tickets SET status = used]
+    R5 --> R6[INSERT attendance ticket_id, check_in_time]
+    R6 --> S[Refresh list]
+
+    O --> T{Organizer confirms?}
+    T -- Cancel --> E
+    T -- Confirm --> U[checkOut attendance.id]
+    U --> V[UPDATE attendance SET check_out_time]
+    V --> S
+
+    S --> E
+
+    %% Alternate path: check in/out directly from the attendees table row
+    D --> W[Table rows show per-attendee\nstatus and Check In / Check Out buttons]
+    W --> X[handleCheckIn reg: checkIn ticket.id]
+    X --> R1
+    W --> Y[handleCheckOut reg: checkOut attendance.id]
+    Y --> V

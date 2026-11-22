@@ -1,0 +1,57 @@
+- generic [ref=f11e5]:
+  - complementary [ref=f11e6]:
+    - link "EventFlow" [ref=f11e8] [cursor=pointer]:
+      - /url: /dashboard
+    - navigation [ref=f11e10]:
+      - link "لوحة التحكم" [ref=f11e11] [cursor=pointer]:
+        - /url: /dashboard
+      - link "تصفّح الفعاليات" [ref=f11e17] [cursor=pointer]:
+        - /url: /events
+      - link "طلبات الفعاليات" [ref=f11e20] [cursor=pointer]:
+        - /url: /dashboard/event-requests
+      - link "فعالياتي" [ref=f11e23] [cursor=pointer]:
+        - /url: /dashboard/events
+      - link "الحظر" [ref=f11e27] [cursor=pointer]:
+        - /url: /dashboard/bans
+      - link "الشؤون المالية" [ref=f11e31] [cursor=pointer]:
+        - /url: /dashboard/finance
+      - link "الجمهور" [ref=f11e35] [cursor=pointer]:
+        - /url: /dashboard/audience
+      - link "الحملات" [ref=f11e41] [cursor=pointer]:
+        - /url: /dashboard/campaigns
+  - generic [ref=f11e45]:
+    - banner [ref=f11e46]:
+      - generic [ref=f11e48]:
+        - button "اللغة" [ref=f11e49]:
+          - generic [ref=f11e53]: العربية
+        - button "تغيير المظهر" [ref=f11e54]
+        - button "الإشعارات" [ref=f11e57]
+        - button "BO Bob Organizer منظّم" [ref=f11e61]:
+          - generic [ref=f11e62]: BO
+          - generic [ref=f11e64]:
+            - paragraph [ref=f11e65]: Bob Organizer
+            - paragraph [ref=f11e66]: منظّم
+    - main [ref=f11e69]:
+      - paragraph [ref=f11e72]: جارٍ تحميل الفعاليات...
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "مساعد EventFlow" [level=3]
+          - paragraph: اسأل عن الفعاليات والأماكن والمزيد
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: مرحبًا!
+        - paragraph: يمكنني مساعدتك في اكتشاف الفعاليات والتعرّف على الأماكن والفئات وغيرها. ما الذي تود معرفته؟
+    - generic:
+      - button "الفعاليات القادمة"
+      - button "البحث حسب الفئة"
+      - button "الأماكن المتاحة"
+      - button "الحصول على التذاكر"
+    - generic:
+      - textbox "اسأل عن الفعاليات والأماكن والفئات..."
+      - button [disabled]
+  - button "المحادثة مع مساعد EventFlow" [ref=f11e73]

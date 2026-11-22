@@ -1,0 +1,93 @@
+---
+title: EventFlow — مخطط المكونات (Component)
+---
+%% المصدر: src/**, supabase/functions/chatbot/index.ts، package.json.
+%% مكوّنات منطقية مستقلة بواجهات (ports) محددة؛ العلاقات تمثل الاعتماديات
+%% الحقيقية بين المكونات (import + الاستدعاء).
+
+flowchart LR
+    subgraph ClientRuntime["مكوّنات العميل — المتصفح (SPA)"]
+        direction TB
+        PAGES["مكوّن: PresentationLayer<br/>صفحات وواجهات المستخدم"]
+        AUTH["مكوّن: AuthComponent<br/>AuthContext + ProtectedRoute/PublicRoute<br/>+RBAC (roles)"]
+        CHAT["مكوّن: ChatComponent<br/>دردشة + واجهة المساعد (useChat)"]
+        QRSCAN["مكوّن: QRScanner<br/>html5-qrcode + qrcode"]
+        THEME["مكوّن: ThemeComponent"]
+        PAGES --> AUTH
+        PAGES --> THEME
+        PAGES --> QRSCAN
+    end
+
+    subgraph ServiceComponents["مكوّنات طبقة الخدمات (Repository)"]
+        direction TB
+        SVC_AUTH["AuthServiceComponent<br/>login/register/restore/reset"]
+        SVC_EVENT["EventManagementComponent<br/>CRUD + نشر/أرشفة/تكرار"]
+        SVC_REG["RegistrationComponent<br/>تسجيل/إلغاء/دعوات/waitlist"]
+        SVC_TICKET["TicketComponent<br/>إصدار/تحقق/تنزيل QR"]
+        SVC_ATT["AttendanceComponent<br/>checkIn/checkOut/auto-attendance"]
+        SVC_CHAT["ChatServiceComponent<br/>قنوات + رسائل + Realtime"]
+        SVC_EVAL["EvaluationComponent<br/>استبيان + submit RPC"]
+        SVC_MISC["SupportComponents<br/>notification/cost/feedback/user/organizer/<br/>category/venue/file/settings/dashboard/reports/audit"]
+    end
+
+    subgraph InfraComponents["مكوّنات بنية تحتية (src/lib)"]
+        direction TB
+        INFRA_SB["DataAccessComponent (SupabaseClient)<br/>=== واجهة REST/RPC ==="]
+        INFRA_RT["RateLimitComponent<br/>30 req/60s"]
+        INFRA_ERR["ErrorMapperComponent<br/>PGRST202/205 → رسائل عربية"]
+    end
+
+    subgraph BackendComponents["مكوّنات الواجهة الخلفية — Supabase"]
+        direction TB
+        BE_PG["PostgresComponent<br/>30 جدول + RLS + قيود + فهارس"]
+        BE_RPC["RPCComponent (SECURITY DEFINER)<br/>=== واجهة RPC ==="]
+        BE_RT["RealtimeComponent<br/>=== واجهة اشتراك (CDC) ==="]
+        BE_ST["StorageComponent<br/>=== واجهة رفع/تنزيل ==="]
+        BE_EF["ChatbotFunction (Edge)<br/>=== واجهة HTTP /functions/v1 ==="]
+        BE_TR["TriggerComponents<br/>waitlist_promotion | auto_assign_organizers"]
+    end
+
+    subgraph ExternalSystems["أنظمة خارجية"]
+        EXT_OR["OpenRouter<br/>=== HTTP chat/completions ==="]
+        EXT_CAM["كاميرا الجهاز<br/>=== إدخال فيديو ==="]
+        EXT_EMAIL["Email Gateway (محاكى)<br/>=== SMTP/بروتوكول بريد ==="]
+        EXT_LM["LM Studio (نسخة الاستوديو)<br/>=== HTTP محلي ==="]
+    end
+
+    AUTH --> SVC_AUTH
+    PAGES --> SVC_EVENT
+    PAGES --> SVC_REG
+    PAGES --> SVC_TICKET
+    PAGES --> SVC_ATT
+    CHAT --> SVC_CHAT
+    PAGES --> SVC_EVAL
+    PAGES --> SVC_MISC
+    QRSCAN --> SVC_ATT
+
+    SVC_AUTH --> INFRA_SB
+    SVC_AUTH --> INFRA_RT
+    SVC_AUTH --> INFRA_ERR
+    SVC_EVENT --> SVC_AUTH
+    SVC_EVENT --> SVC_MISC
+    SVC_REG --> SVC_TICKET
+    SVC_REG --> SVC_MISC
+    SVC_ATT --> SVC_TICKET
+    SVC_CHAT --> SVC_MISC
+    SVC_EVAL --> SVC_MISC
+    SVC_EVENT --> INFRA_SB
+    SVC_TICKET --> INFRA_SB
+    SVC_MISC --> INFRA_SB
+
+    INFRA_SB -->|"HTTPS + anon key"| BE_PG
+    INFRA_SB -->|"rpc(...)"| BE_RPC
+    INFRA_SB -->|"subscribe"| BE_RT
+    INFRA_SB -->|"upload/download"| BE_ST
+
+    CHAT -->|"fetch"| BE_EF
+    BE_EF -->|"service-role key"| BE_PG
+    BE_EF -->|"HTTP POST"| EXT_OR
+    CHAT -.->|"fallback"| EXT_LM
+    QRSCAN -.->|"إدخال"| EXT_CAM
+    SVC_AUTH -.->|"قوالب البريد"| EXT_EMAIL
+
+    BE_TR --> BE_PG

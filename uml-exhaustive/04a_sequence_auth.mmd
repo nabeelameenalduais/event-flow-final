@@ -1,0 +1,143 @@
+---
+title: EventFlow - تسلسل المصادقة (تسجيل دخول / تسجيل حساب / استعادة / خروج)
+---
+%% المصدر: src/services/authService.ts, src/contexts/AuthContext.tsx,
+%%          src/services/deviceSessionService.ts, src/lib/rateLimit.ts
+%% الفاعل: المستخدم (أي دور) - شاشات: Login / Register / Forgot / Reset.
+%% الحالات الخاصة متعلقة بالمستخدم نفسه (بريده وكلمة مروره وجلساته).
+%% التدفق متتابع: كل طلب يُرسل ثم يُنتظر رده قبل الطلب التالي.
+
+sequenceDiagram
+    autonumber
+    participant U as المستخدم (User)
+    participant A as AuthContext
+    participant S as authService
+    participant R as RateLimiter
+    participant DB as Supabase (RPC/RLS)
+    participant AU as auditService
+
+    rect rgb(240, 248, 255)
+    Note over U,AU: 1) تسجيل الدخول (Login)
+    U->>A: login(email, password)
+    A->>A: setState(isLoading=true)
+    A->>S: authService.login(email, password)
+    S->>R: withRateLimit("login:{email}")
+    alt تجاوز الحد (5 محاولات / 15 دقيقة)
+        R-->>S: RATE_LIMITED
+        S-->>A: فشل
+        A-->>U: رسالة "تم تقييد المحاولات"
+    else لم يتجاوز الحد
+        S->>DB: rpc("authenticate_user", {p_email, p_password})
+        alt كلمة مرور خاطئة
+            DB-->>S: "Invalid email or password"
+            S-->>A: فشل
+            A-->>U: رسالة خطأ بيانات الدخول
+        else الحساب معلّق
+            DB-->>S: "Account is suspended"
+            S-->>A: فشل
+            A-->>U: رسالة الحساب معلق
+        else نجاح
+            DB-->>S: المستخدم + الملف + الدور
+            S->>AU: logAction(id, "login")
+            AU-->>S: تم التسجيل
+            S-->>A: AuthResult
+            Note over S: عند غياب RPC (PGRST202): تدفق SHA-256 القديم كلـ fallback (مؤكد بالاختبارات)
+        end
+    end
+    alt تم تسجيل الدخول بنجاح
+        A->>S: sessionService.createDeviceSession(user.id)
+        S->>DB: INSERT device_sessions (token)
+        DB-->>S: { token }
+        A->>A: localStorage.setItem("eventflow_session", token) + setState(مصادق)
+        A-->>U: توجيه (Organizer/Admin => /dashboard)
+    end
+    end
+
+    rect rgb(250, 250, 245)
+    Note over U,AU: 2) إنشاء حساب (Register) - دور الحضور فقط
+    U->>A: register(email, password, firstName, lastName)
+    A->>S: authService.register(...)
+    S->>R: withRateLimit("register:{email}")
+    S->>DB: rpc("register_user", {...})
+    alt البريد مستخدم مسبقاً
+        DB-->>S: "Email already in use"
+        S-->>A: فشل
+        A-->>U: رسالة البريد موجود
+    else نجاح
+        DB-->>S: المستخدم الجديد (الدور attendee)
+        S->>AU: logAction(id, "register")
+        AU-->>S: تم التسجيل
+        S-->>A: AuthResult
+        Note over S: عند غياب RPC (PGRST202): تدفق SHA-256 القديم كلـ fallback
+        A->>S: createDeviceSession(user.id)
+        S->>DB: INSERT device_sessions (token)
+        DB-->>S: { token }
+        A->>A: localStorage.setItem(...) + setState
+        A-->>U: توجيه للوحة المستخدم
+    end
+    end
+
+    rect rgb(245, 250, 245)
+    Note over U,AU: 3) استعادة الجلسة تلقائياً (Restore)
+    Note over A: عند فتح التطبيق: token = localStorage
+    alt يوجد token
+        A->>S: restoreSession(token)
+        S->>DB: rpc("get_session_user", {p_token})
+        DB-->>S: بيانات الجلسة/المستخدم
+        alt الجلسة منتهية أو محذوفة أو الحساب معلق
+            DB-->>S: خطأ
+            S-->>A: فشل
+            A->>A: localStorage.removeItem(...) + isLoading=false
+        else نجاح
+            A->>A: setState(isAuthenticated=true)
+        end
+    else لا يوجد token
+        A->>A: isLoading=false (غير مسجّل دخول)
+    end
+    end
+
+    rect rgb(255, 248, 245)
+    Note over U,AU: 4) استعادة كلمة المرور (نسيت كلمة المرور)
+    U->>A: requestPasswordReset(email)
+    A->>S: authService.requestPasswordReset(email)
+    S->>DB: rpc("request_password_reset", {p_email})
+    alt البريد غير موجود (رسالة عامة موحّدة)
+        DB-->>S: "If that email exists, a reset link has been sent."
+        S-->>U: نفس الرسالة (لا تكشف الوجود)
+    else البريد موجود
+        DB->>DB: إنشاء رمز + انتهاء (expires_at = 30 دقيقة)
+        DB-->>S: token
+        S-->>U: يُعلم بأن رابط الإعادة أُرسل (بصياغة موحّدة لا تكشف الوجود)
+    end
+    U->>A: resetPassword(token, newPassword)
+    A->>S: resetPasswordWithToken(token, newPassword)
+    S->>DB: rpc("reset_password_with_token", {p_token, p_new_password})
+    alt الرمز منتهي أو غير صالح
+        DB-->>S: "Reset token is invalid or expired."
+        S-->>U: خطأ
+    else كلمة المرور أقل من 6 أحرف
+        DB-->>S: "Password must be at least 6 characters."
+        S-->>U: خطأ
+    else نجاح
+        DB->>DB: UPDATE كلمة المرور + إبطال الرمز + حذف جلسات القديمة
+        DB-->>S: {ok: true}
+        S-->>U: نجاح (يُعاد لتسجيل الدخول)
+    end
+    end
+
+    rect rgb(245, 245, 250)
+    Note over U,AU: 5) تسجيل الخروج (Logout)
+    U->>A: logout()
+    A->>A: token = localStorage.getItem(...)
+    alt يوجد token
+        A->>S: revokeSession(token)
+        S->>DB: rpc("revoke_session", {p_token})
+        alt نجاح
+            DB->>DB: DELETE device_sessions WHERE token=...
+            S->>AU: logAction("", "logout")
+            AU-->>S: تم
+        end
+    end
+    A->>A: localStorage.removeItem(...) + setState(null)
+    A-->>U: شاشة تسجيل الدخول
+    end

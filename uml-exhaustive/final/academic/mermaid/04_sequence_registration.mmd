@@ -1,0 +1,93 @@
+sequenceDiagram
+    autonumber
+
+%% ==================================================================
+%% EventFlow - Event registration sequence: register for a public or
+%% private (invite-code) event, ticket generation, waitlist auto-
+%% promotion on cancel (matched to src/services/eventService.ts
+%% registerForEvent / generateTicketForRegistration / cancelRegistration,
+%% src/services/invitationService.ts, src/services/notificationService.ts)
+%% ==================================================================
+
+    actor A as Attendee
+    participant PG as Event detail page
+    participant VC as eventService<br/>(registerForEvent)
+    participant IN as invitationService
+    participant TK as ticket generation<br/>(QRCode)
+    participant NO as notificationService
+    participant DB as Supabase client
+
+    Note over A,DB: --- REGISTER for a PUBLIC event (registerForEvent) ---
+    A->>PG: click "Register"
+    PG->>VC: registerForEvent(eventId, attendeeId)
+    VC->>DB: select event (status, visibility, capacity, deadlines)
+    alt event not published, or past deadline, or already ended
+        DB-->>VC: event info
+        VC-->>A: error "not open for registration / deadline passed / ended"
+    else event is valid
+        VC->>DB: existing registration for this attendee?
+        alt already registered
+            DB-->>VC: existing row
+            VC-->>A: error "Already registered for this event"
+        else new registration
+            VC->>DB: count registrations with status confirmed
+            alt count reaches capacity
+                DB-->>VC: isFull = true
+                VC->>DB: insert registration (status waitlisted)
+                VC->>NO: sendNotification (waitlist)
+                NO-->>A: "Added to the waiting list, we will notify you if a spot opens"
+            else seats are available
+                DB-->>VC: isFull = false
+                VC->>DB: insert registration (status confirmed)
+                VC->>TK: generateTicketForRegistration(registration, title)
+                TK->>TK: unique_code = TITLE6-BASE36(now)
+                TK->>TK: qrDataUrl = QRCode.toDataURL(unique_code)
+                TK->>DB: insert tickets (registration_id, unique_code, qr_code_url)
+                VC->>NO: sendNotification (registration_confirmation)
+                NO-->>A: "Your registration is confirmed, ticket ready in dashboard"
+            end
+        end
+    end
+
+    Note over A,DB: --- REGISTER for a PRIVATE event with an invite code ---
+    A->>PG: submit invitation code
+    PG->>VC: registerForEvent(eventId, attendeeId, code)
+    VC->>DB: select event (visibility private)
+    VC->>IN: getLinkByCode(code)
+    IN->>DB: select invitation_links by code
+    DB-->>IN: link
+    alt link missing
+        IN-->>VC: error "Invalid invitation link"
+    else link already used
+        IN-->>VC: error "This invitation link has already been used"
+    else link belongs to another event
+        IN-->>VC: error "does not belong to this event"
+    else link email does not match attendee email
+        VC->>DB: select profile (attendee email)
+        VC-->>A: error "This invitation was sent to a different email address"
+    else invitation is valid
+        Note over VC,DB: registerForEvent continues exactly as in the public flow:<br/>duplicate check, capacity count, confirmed or waitlisted, ticket
+        VC->>DB: markLinkAsUsed(link.id)
+        VC->>DB: select event organizer profile
+        VC->>NO: sendNotification (invitation_used)
+        NO-->>A: invited guest registered, ticket ready if confirmed
+    end
+
+    Note over A,DB: --- CANCEL a registration (cancelRegistration) ---
+    A->>PG: cancel registration
+    PG->>VC: cancelRegistration(id)
+    VC->>DB: select registration (event_id, status)
+    VC->>DB: update registration to status cancelled
+    alt cancelled seat was not confirmed
+        VC-->>A: done, no further action
+    else a confirmed spot was freed
+        VC->>DB: first waitlisted registration ordered by registered_at
+        alt a waitlisted attendee exists
+            VC->>DB: update that registration to confirmed
+            VC->>TK: generateTicketForRegistration(...)
+            TK->>DB: insert tickets (confirmed waitlisted attendee)
+            VC-->>A: seat redirected to the next waitlisted attendee
+        else no waitlisted attendee
+            VC-->>A: done, seat stays open
+        end
+    end

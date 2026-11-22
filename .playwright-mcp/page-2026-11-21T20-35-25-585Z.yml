@@ -1,0 +1,75 @@
+- generic [ref=f1e5]:
+  - complementary [ref=f1e6]:
+    - link "EventFlow" [ref=f1e8] [cursor=pointer]:
+      - /url: /dashboard
+    - navigation [ref=f1e10]:
+      - link "لوحة التحكم" [ref=f1e11] [cursor=pointer]:
+        - /url: /dashboard
+      - link "تصفّح الفعاليات" [ref=f1e17] [cursor=pointer]:
+        - /url: /events
+      - link "طلبات الفعاليات" [ref=f1e20] [cursor=pointer]:
+        - /url: /dashboard/event-requests
+      - link "فعالياتي" [ref=f1e23] [cursor=pointer]:
+        - /url: /dashboard/events
+      - link "الحظر" [ref=f1e27] [cursor=pointer]:
+        - /url: /dashboard/bans
+      - link "الشؤون المالية" [ref=f1e31] [cursor=pointer]:
+        - /url: /dashboard/finance
+      - link "الجمهور" [ref=f1e35] [cursor=pointer]:
+        - /url: /dashboard/audience
+      - link "الحملات" [ref=f1e41] [cursor=pointer]:
+        - /url: /dashboard/campaigns
+      - link "المستخدمون" [ref=f1e45] [cursor=pointer]:
+        - /url: /dashboard/admin/users
+      - link "الفئات" [ref=f1e58] [cursor=pointer]:
+        - /url: /dashboard/admin/categories
+      - link "الأماكن" [ref=f1e63] [cursor=pointer]:
+        - /url: /dashboard/admin/venues
+      - link "الملفات" [ref=f1e68] [cursor=pointer]:
+        - /url: /dashboard/admin/files
+      - link "التقارير" [ref=f1e73] [cursor=pointer]:
+        - /url: /dashboard/admin/reports
+      - link "الرسائل الجماعية" [ref=f1e76] [cursor=pointer]:
+        - /url: /dashboard/admin/broadcast
+      - link "إعادة تعيين كلمات المرور" [ref=f1e80] [cursor=pointer]:
+        - /url: /dashboard/admin/password-resets
+      - link "الإعدادات" [ref=f1e84] [cursor=pointer]:
+        - /url: /dashboard/admin/settings
+      - link "الأمان" [ref=f1e88] [cursor=pointer]:
+        - /url: /dashboard/admin/security
+  - generic [ref=f1e91]:
+    - banner [ref=f1e92]:
+      - generic [ref=f1e94]:
+        - button "اللغة" [ref=f1e95]:
+          - generic [ref=f1e99]: العربية
+        - button "تغيير المظهر" [ref=f1e100]
+        - button "الإشعارات" [ref=f1e103]
+        - button "AA Alice Admin مدير" [ref=f1e107]:
+          - generic [ref=f1e108]: AA
+          - generic [ref=f1e110]:
+            - paragraph [ref=f1e111]: Alice Admin
+            - paragraph [ref=f1e112]: مدير
+    - main [ref=f1e115]:
+      - paragraph [ref=f1e118]: جارٍ تحميل الفعاليات...
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "مساعد EventFlow" [level=3]
+          - paragraph: اسأل عن الفعاليات والأماكن والمزيد
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: مرحبًا!
+        - paragraph: يمكنني مساعدتك في اكتشاف الفعاليات والتعرّف على الأماكن والفئات وغيرها. ما الذي تود معرفته؟
+    - generic:
+      - button "الفعاليات القادمة"
+      - button "البحث حسب الفئة"
+      - button "الأماكن المتاحة"
+      - button "الحصول على التذاكر"
+    - generic:
+      - textbox "اسأل عن الفعاليات والأماكن والفئات..."
+      - button [disabled]
+  - button "المحادثة مع مساعد EventFlow" [ref=f1e119]

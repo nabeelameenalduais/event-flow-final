@@ -1,0 +1,87 @@
+---
+title: EventFlow - تسلسل تسجيل الحضور / المغادرة (Check-in / Check-out)
+---
+%% المصدر: src/services/attendanceService.ts (checkIn, checkOut, findTicketByCode,
+%%          markAutoAttendance), src/pages/AttendanceManagement.tsx (لوحة المنظم)
+%% الفاعل: المنظم (Organizer) - شاشة الحضور في لوحة المنظم.
+%% ملاحظة: لا توجد خطوة audit في checkIn فعلياً (تُحذف من المخطط).
+
+sequenceDiagram
+    autonumber
+    participant O as المنظم (Organizer)
+    participant CAM as كاميرا QR
+    participant UI as شاشة الحضور (Attendance)
+    participant AT as attendanceService
+    participant DB as Supabase (RLS)
+
+    rect rgb(240, 248, 255)
+    Note over O,DB: 1) البحث عن تذكرة الحضور (كتابة الرمز أو مسحه)
+    O->>CAM: تشغيل كاميرا المسح / html5-qrcode
+    CAM-->>O: قراءة unique_code من QR
+    O->>UI: إدخال رمز التذكرة (أو من مسح الكاميرا)
+    UI->>AT: findTicketByCode(code)
+    AT->>DB: SELECT التذاكر (join حالة التسجيل) WHERE unique_code = رمز
+    DB-->>AT: تذكرة (إن وُجدت وكان التسجيل confirmed) أو لا شيء
+    alt لا توجد تذكرة / التسجيل غير confirmed
+        AT-->>UI: undefined
+        UI-->>O: "لا توجد تذكرة صالحة بهذا الرمز"
+    else وجدت التذكرة
+        AT-->>UI: التذكرة
+        UI-->>O: عرض تفاصيل الحضور (الاسم، الحالة) للتأكيد
+    end
+    end
+
+    rect rgb(255, 248, 245)
+    Note over O,DB: 2) تسجيل الدخول (Check-in) بعد التأكيد
+    O->>UI: تأكيد "تسجيل الحضور"
+    UI->>AT: checkIn(ticket.id)
+    AT->>DB: SELECT التذكرة + حالة التسجيل
+    DB-->>AT: التذكرة (status + registration.status)
+    alt التذكرة غير موجودة
+        AT-->>UI: "Ticket not found"
+    else التذكرة مستخدمة مسبقاً
+        AT-->>UI: "Ticket already checked in"
+    else التسجيل ليس confirmed
+        AT-->>UI: "Registration is not confirmed - cannot check in"
+    else كل فحوصات سليمة
+        AT->>DB: UPDATE التذاكر SET status='used'
+        DB-->>AT: تم
+        AT->>DB: INSERT حضور (check_in_time = now)
+        DB-->>AT: سجل الحضور
+        AT-->>UI: { status: success }
+        UI-->>O: "تم تسجيل الحضور"
+    end
+    end
+
+    rect rgb(245, 250, 245)
+    Note over O,DB: 3) تسجيل المغادرة (Check-out)
+    O->>UI: زر "تسجيل المغادرة"
+    UI->>AT: checkOut(attendanceId)
+    AT->>DB: UPDATE الحضور SET check_out_time = now
+    DB-->>AT: سجل الحضور المحدّث
+    AT-->>UI: سجل محدّث
+    UI-->>O: "تم تسجيل المغادرة"
+    end
+
+    rect rgb(250, 250, 245)
+    Note over O,DB: 4) حضور تلقائي للفعاليات أونلاين (بفتح رابط الاجتماع)
+    Note over O: يخصّ الحضور عند فتح رابط الاجتماع للفعاليات عبر الإنترنت
+    participant U as الحضور (Attendee)
+    U->>UI: فتح رابط الاجتماع (meeting link)
+    UI->>AT: markAutoAttendance(eventId, attendeeId)
+    AT->>DB: SELECT تذكرة الحضور (التسجيل confirmed)
+    DB-->>AT: التذكرة (أو لا شيء)
+    alt لا توجد تذكرة صالحة / غير confirmed
+        AT-->>UI: بلا (لا تسجيل حضور)
+    else وُجد تسجيل حضور سابق (idempotent)
+        AT->>DB: SELECT attendance EXISTS
+        DB-->>AT: موجود
+        AT-->>UI: بلا (مكرر)
+    else تسجيل أول
+        AT->>DB: UPDATE التذكرة status='used'
+        DB-->>AT: تم
+        AT->>DB: INSERT حضور
+        DB-->>AT: سجل
+        AT-->>UI: تم الحضور تلقائياً
+    end
+    end

@@ -1,0 +1,163 @@
+@startuml
+' ============================================================================
+' 02_class.puml - EventFlow Detailed Class Diagram (Layered Architecture)
+' Traceability: src/types/index.ts, src/services/*.ts, src/contexts,
+'               src/routes, src/lib, supabase/functions/chatbot
+' Notes: Arabic text is wrapped in quotes for PlantUML parse safety.
+' ============================================================================
+' ---------- Style ----------
+skinparam class {
+  BackgroundColor #FFFFFF
+  ArrowColor #1F3864
+  BorderColor #1F3864
+  FontColor #1F3864
+}
+skinparam package {
+  BackgroundColor #F4F7FB
+  BorderColor #2E74B5
+  FontColor #17365D
+}
+skinparam stereotypeCBackgroundColor #E8F0FB
+skinparam classAttributeIconSize 0
+
+' ---------- Included Parts ----------
+!include 02_class_entities.puml
+!include 02_class_services.puml
+!include 02_class_platform.puml
+
+' ============================================================================
+' ASSOCIATIONS - Domain Integrity (trace: supabase/schema.sql)
+' ============================================================================
+' -- Identity / RBAC --
+User "1" --> "1" Profile : owns
+User "1" --> "0..*" DeviceSession : has
+User "1" --> "0..*" Notification : receives
+User "1" --> "0..*" AuditLog : generates
+Role "1" --> "1..*" Profile : assigned_to
+Profile "0..*" --> "1" Role : has_role
+
+' -- Catalog --
+Category "1" --> "0..*" Event : categorizes
+Venue "0..1" --> "0..*" Event : hosts
+
+' -- Event management --
+Event "1" --> "0..*" EventOrganizer : managed_by
+Profile "1" --> "0..*" EventOrganizer : is_organizer_of
+Event "1" --> "0..*" Session : contains
+Session "1" --> "0..*" Speaker : hosts
+Event "1" --> "0..*" Registration : receives
+Event "1" --> "0..*" InvitationLink : invites
+Event "1" --> "0..*" ChatChannel : has
+Event "1" --> "0..*" Evaluation : evaluated_by
+Event "1" --> "0..*" EventCost : budgets
+Event "1" --> "0..*" Feedback : receives
+
+' -- Registration lifecycle --
+Registration "1" --> "0..1" Ticket : grants
+Registration "0..*" --> "1" Event : belongs_to
+Registration "0..*" --> "1" Profile : submitted_by
+Ticket "1" --> "0..1" Attendance : used_for
+Ticket "1" --> "1" Registration : issued_to
+
+' -- Chat --
+ChatChannel "1" --> "0..*" ChatMessage : contains
+ChatMessage "0..*" --> "1" ChatChannel : posted_in
+ChatMessageWithSender --> ChatMessage : decorates
+
+' -- Evaluation --
+Evaluation "1" --> "0..*" EvaluationQuestion : contains
+Evaluation "1" --> "0..*" EvaluationSubmission : collects
+EvaluationQuestion "1" --> "0..*" EvaluationAnswer : answered_by
+EvaluationSubmission "1" --> "0..*" EvaluationAnswer : aggregates
+EvaluationSubmission "0..*" --> "1" Profile : authored_by
+
+' ============================================================================
+' ASSOCIATIONS - Service Layer Dependencies (trace: src/services/*.ts)
+' ============================================================================
+AuthService --> supabaseClient : queries via
+AuthService --> RateLimiter : rate_limit
+AuthService --> SupabaseErrorMapper : maps_errors
+AuthService --> Profile : reads
+RegistrationService --> TicketService : issues_ticket
+RegistrationService --> NotificationService : notifies
+RegistrationService --> supabaseClient
+TicketService --> supabaseClient
+AttendanceService --> TicketService : validates
+AttendanceService --> AuditService : logs_checkin
+AttendanceService --> supabaseClient
+EventService --> supabaseClient
+EventService --> NotificationService : broadcasts_updates
+EvaluationService --> supabaseClient
+EvaluationService --> AuditService : logs_submission
+ChatService --> supabaseClient
+InvitationService --> supabaseClient
+InvitationService --> NotificationService : notifies
+UserService --> supabaseClient
+OrganizerService --> supabaseClient
+OrganizerService --> AuditService : logs_assignment
+NotificationService --> supabaseClient
+AuditService --> supabaseClient
+DeviceSessionService --> supabaseClient
+SessionService --> supabaseClient
+CostService --> supabaseClient
+FeedbackService --> supabaseClient
+FeedbackService --> NotificationService
+CategoryService --> supabaseClient
+VenueService --> supabaseClient
+FileService --> supabaseClient
+SettingsService --> supabaseClient
+DashboardService --> supabaseClient
+DashboardService --> EventService
+ReportsService --> supabaseClient
+ReportsService --> TicketService
+ReportsService --> AttendanceService
+
+' ============================================================================
+' ASSOCIATIONS - Presentation -> Services (trace: src/contexts, src/routes)
+' ============================================================================
+AuthContext --> AuthService : delegates
+AuthContext --> SessionService : manages_session
+AuthContext --> DeviceSessionService
+ProtectedRoute ..> Role : checks
+ProtectedRoute --> AuthContext : reads_profile
+PublicRoute --> AuthContext : reads_session
+
+' ============================================================================
+' ASSOCIATIONS - Chatbot (trace: supabase/functions/chatbot/index.ts)
+' ============================================================================
+ChatbotEdgeFunction *-- ChatTool : uses
+ChatbotEdgeFunction --> supabaseClient : db_tools
+ChatbotClient ..> ChatbotEdgeFunction : invokes_https
+ChatbotClient --> supabaseClient : fallback_path
+
+note right of Registration
+  State machine: pending -> confirmed -> cancelled
+  or pending -> waitlisted -> confirmed.
+  (c.f. 05a_activity_registration.mmd)
+end note
+
+note left of Attendance
+  checkIn rejects non-confirmed registrations
+  and used tickets. (c.f. 04c/05b)
+end note
+
+legend right
+  | Symbol | Meaning |
+  |---|----|
+  | <<entity>> | Postgres table-backed domain class |
+  | <<service>> | Client repository (src/services) |
+  | <<context>> | React context provider |
+  | <<guard>> | Route guard (RBAC) |
+  | <<singleton>> | Single shared client |
+  | <<edge_function>> | Supabase Edge Function (Deno) |
+endlegend
+
+' ---- Security note (trace: schema-part2-security.sql) ----
+note top
+  RLS: every table enforces row-level security.
+  DeviceSession.token & User.password_hash are
+  server-only (never selectable from client).
+  AuditLog is append-only.
+end note
+
+@enduml

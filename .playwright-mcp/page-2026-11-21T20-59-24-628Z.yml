@@ -1,0 +1,102 @@
+- generic:
+  - generic:
+    - generic:
+      - banner [aria-hidden]:
+        - generic:
+          - link:
+            - /url: /
+            - generic: EventFlow
+          - navigation:
+            - link:
+              - /url: /
+              - text: الرئيسية
+            - link:
+              - /url: /events
+              - text: الفعاليات
+            - link:
+              - /url: /about
+              - text: عن المنصة
+            - link:
+              - /url: /contact
+              - text: اتصل بنا
+          - generic:
+            - button [expanded]:
+              - generic: العربية
+            - button
+            - link:
+              - /url: /login
+              - text: تسجيل الدخول
+            - link:
+              - /url: /register
+              - text: إنشاء حساب
+      - main [aria-hidden]:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=1]: تسجيل الدخول
+                  - paragraph: مرحبًا بعودتك إلى EventFlow
+                - generic:
+                  - generic:
+                    - generic: البريد الإلكتروني
+                    - textbox:
+                      - /placeholder: you@example.com
+                  - generic:
+                    - generic: كلمة المرور
+                    - textbox:
+                      - /placeholder: أدخل كلمة المرور
+                  - button: تسجيل الدخول
+                  - generic:
+                    - link:
+                      - /url: /forgot-password
+                      - text: نسيت كلمة المرور؟
+                    - link:
+                      - /url: /register
+                      - text: إنشاء حساب
+                  - paragraph:
+                    - text: حذفت حسابك؟
+                    - link:
+                      - /url: /restore-account
+                      - text: استعده خلال فترة الاسترداد
+                - generic:
+                  - paragraph: تسجيل دخول تجريبي سريع
+                  - generic:
+                    - button:
+                      - generic: مدير
+                      - generic: admin@eventflow.com / one
+                    - button:
+                      - generic: منظّم
+                      - generic: organizer@eventflow.com / one
+                    - button:
+                      - generic: مشارك
+                      - generic: attendee@eventflow.com / one
+                  - paragraph: انقر على الدور لتسجيل الدخول فورًا.
+      - contentinfo [aria-hidden]:
+        - generic: © 2026 EventFlow. جميع الحقوق محفوظة.
+      - region "Notifications alt+T"
+      - generic [aria-hidden]:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=3]: مساعد EventFlow
+              - paragraph: اسأل عن الفعاليات والأماكن والمزيد
+          - generic:
+            - button
+        - generic:
+          - generic:
+            - paragraph: مرحبًا!
+            - paragraph: يمكنني مساعدتك في اكتشاف الفعاليات والتعرّف على الأماكن والفئات وغيرها. ما الذي تود معرفته؟
+        - generic:
+          - button: الفعاليات القادمة
+          - button: البحث حسب الفئة
+          - button: الأماكن المتاحة
+          - button: الحصول على التذاكر
+        - generic:
+          - textbox:
+            - /placeholder: اسأل عن الفعاليات والأماكن والفئات...
+          - button [disabled]
+      - button [aria-hidden]
+  - menu "اللغة" [active] [ref=f11e157]:
+    - menuitem "العربية" [ref=f11e158]
+    - menuitem "English" [ref=f11e159]

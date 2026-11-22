@@ -1,0 +1,43 @@
+@startuml
+title Activity - Event Registration (Academic)
+skinparam shadowing false
+start
+:Submit registration form\n(eventId, email, optional invite code);
+:Load event (title, capacity, visibility, status, start/end, deadline);
+if (Event exists, published, before\ndeadline and not ended?) then (no)
+  :Error "Event not found / Registration closed";
+  stop
+else (yes)
+endif
+if (Private event?) then (yes)
+  :Get invite link by code;
+  if (Link valid, unused, matches\nevent & email?) then (no)
+    :Error "Invalid invitation link";
+    stop
+  else (yes)
+  endif
+else (no)
+endif
+:Check existing registration (getRegistrationForAttendee);
+if (Already registered?) then (yes)
+  :Error "Already registered";
+  stop
+else (no)
+endif
+:Count confirmed registrations;
+if (Capacity full?) then (yes)
+  :Insert registration - waitlisted;
+  :Send notification type "waitlist";
+else (no)
+  :Insert registration - confirmed;
+  :Generate ticket (uniqueCode + QR);
+  :Send notification type "registration_confirmation";
+endif
+if (Private event with used invite link?) then (yes)
+  :markLinkAsUsed(linkId);
+  :Send notification type "invitation_used" (organizer);
+else (no)
+endif
+:Show result (ticket / waitlist badge);
+stop
+@enduml

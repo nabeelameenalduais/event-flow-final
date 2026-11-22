@@ -1,0 +1,382 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary [aria-hidden]:
+        - generic:
+          - link:
+            - /url: /dashboard
+            - generic: EventFlow
+        - navigation:
+          - link:
+            - /url: /dashboard
+            - text: Dashboard
+          - link:
+            - /url: /events
+            - text: Browse Events
+          - link:
+            - /url: /dashboard/event-requests
+            - text: Event Requests
+          - link:
+            - /url: /dashboard/events
+            - text: My Events
+          - link:
+            - /url: /dashboard/bans
+            - text: Bans
+          - link:
+            - /url: /dashboard/finance
+            - text: Finance
+          - link:
+            - /url: /dashboard/audience
+            - text: Audience
+          - link:
+            - /url: /dashboard/campaigns
+            - text: Campaigns
+          - link:
+            - /url: /dashboard/admin/users
+            - text: Users
+          - link:
+            - /url: /dashboard/admin/categories
+            - text: Categories
+          - link:
+            - /url: /dashboard/admin/venues
+            - text: Venues
+          - link:
+            - /url: /dashboard/admin/files
+            - text: Files
+          - link:
+            - /url: /dashboard/admin/reports
+            - text: Reports
+          - link:
+            - /url: /dashboard/admin/broadcast
+            - text: Broadcast
+          - link:
+            - /url: /dashboard/admin/password-resets
+            - text: Password Resets
+          - link:
+            - /url: /dashboard/admin/settings
+            - text: Settings
+          - link:
+            - /url: /dashboard/admin/security
+            - text: Security
+      - generic [aria-hidden]:
+        - banner:
+          - generic:
+            - button:
+              - generic: English
+            - button
+            - button
+            - button:
+              - generic: AA
+              - generic:
+                - paragraph: Alice Admin
+                - paragraph: admin
+        - main:
+          - generic:
+            - generic:
+              - heading [level=1]: My Events
+              - button: Create Event
+            - paragraph: Showing all events (admin view)
+            - generic:
+              - generic:
+                - textbox:
+                  - /placeholder: Search events...
+              - combobox:
+                - generic: All statuses
+              - combobox:
+                - generic: All visibilities
+              - combobox:
+                - generic: Newest first
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: QA-MYEVENTS-FIX-ACTION
+                      - generic: published
+                      - generic: Public
+                    - generic:
+                      - generic: 12/2/2026
+                      - generic: Grand Convention Center
+                      - generic: 100 spots
+                - generic:
+                  - button: Registrations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Send Reminder
+                  - button: Archive
+                  - button: Unpublish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Data Science Bootcamp
+                      - generic: published
+                      - generic: Public
+                    - generic:
+                      - generic: 10/15/2026
+                      - generic: Tech Hub Auditorium
+                      - generic: 60 spots
+                - generic:
+                  - button: Registrations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Send Reminder
+                  - button: Archive
+                  - button: Unpublish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: DevOps Days
+                      - generic: published
+                      - generic: Public
+                    - generic:
+                      - generic: 10/1/2026
+                      - generic: Grand Convention Center
+                      - generic: 400 spots
+                - generic:
+                  - button: Registrations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Send Reminder
+                  - button: Archive
+                  - button: Unpublish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: AI a
+                      - generic: published
+                      - generic: Private
+                    - generic:
+                      - generic: 9/24/2026
+                      - generic: Grand Convention Center
+                      - generic: 100 spots
+                - generic:
+                  - button: Registrations
+                  - button: Invitations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Send Reminder
+                  - button: Archive
+                  - button: Unpublish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Draft Planning Session
+                      - generic: draft
+                      - generic: Private
+                    - generic:
+                      - generic: 9/10/2026
+                      - generic: Grand Convention Center
+                      - generic: 20 spots
+                - generic:
+                  - button: Registrations
+                  - button: Invitations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Publish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Product Launch Meetup
+                      - generic: published
+                      - generic: Public
+                    - generic:
+                      - generic: 9/5/2026
+                      - generic: Tech Hub Auditorium
+                      - generic: 120 spots
+                - generic:
+                  - button: Registrations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Send Reminder
+                  - button: Archive
+                  - button: Unpublish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: لمولد النبوي (Copy)
+                      - generic: draft
+                      - generic: Private
+                    - generic:
+                      - generic: 8/22/2026
+                      - generic: Grand Convention Center
+                      - generic: 100 spots
+                - generic:
+                  - button: Registrations
+                  - button: Invitations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Publish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: لمولد النبوي
+                      - generic: draft
+                      - generic: Public
+                    - generic:
+                      - generic: 8/22/2026
+                      - generic: Grand Convention Center
+                      - generic: 100 spots
+                - generic:
+                  - button: Registrations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Publish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Hackathon 2026
+                      - generic: published
+                      - generic: Public
+                    - generic:
+                      - generic: 8/22/2026
+                      - generic: Grand Convention Center
+                      - generic: 200 spots
+                - generic:
+                  - button: Registrations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Send Reminder
+                  - button: Archive
+                  - button: Unpublish
+                  - button: Duplicate
+                  - button: Delete
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: s
+                      - generic: published
+                      - generic: Private
+                    - generic:
+                      - generic: 8/14/2026
+                      - generic: Grand Convention Center
+                      - generic: 100 spots
+                - generic:
+                  - button: Registrations
+                  - button: Invitations
+                  - button: Attendance
+                  - button: Schedule
+                  - button: Costs
+                  - button: Evaluation
+                  - button: Chat
+                  - button: Organizers
+                  - button: View
+                  - button: Edit
+                  - button: Send Reminder
+                  - button: Archive
+                  - button: Unpublish
+                  - button: Duplicate
+                  - button: Delete
+            - generic:
+              - button [disabled]: Previous
+              - generic: Page 1 of 3
+              - button: Next
+      - region "Notifications alt+T"
+      - generic [aria-hidden]:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=3]: EventFlow Assistant
+              - paragraph: Ask about events, venues & more
+          - generic:
+            - button
+        - generic:
+          - generic:
+            - paragraph: Hi there!
+            - paragraph: I can help you discover events, check venues, explore categories, and more. What would you like to know?
+        - generic:
+          - button: Upcoming events
+          - button: Find by category
+          - button: Available venues
+          - button: Get tickets
+        - generic:
+          - textbox:
+            - /placeholder: Ask about events, venues, categories...
+          - button [disabled]
+      - button [aria-hidden]
+  - dialog "Confirm action" [ref=f10e953]:
+    - generic [ref=f10e954]:
+      - heading "Confirm action" [level=2] [ref=f10e955]
+      - paragraph [ref=f10e956]: Move "QA-MYEVENTS-FIX-ACTION" back to draft?
+    - generic [ref=f10e957]:
+      - button "Cancel" [active] [ref=f10e958]
+      - button "Confirm" [ref=f10e959]
+    - button "Close" [ref=f10e960]

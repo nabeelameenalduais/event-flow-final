@@ -1,0 +1,44 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - link "EventFlow" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e9]:
+        - link "الفعاليات" [ref=e11] [cursor=pointer]:
+          - /url: /events
+        - link "لوحة التحكم" [ref=e71] [cursor=pointer]:
+          - /url: /dashboard
+      - generic [ref=e14]:
+        - button "اللغة" [ref=e15]:
+          - generic [ref=e19]: العربية
+        - button "تغيير المظهر" [ref=e20]
+        - link "لوحة التحكم (Alice)" [ref=e72] [cursor=pointer]:
+          - /url: /dashboard
+  - main
+  - contentinfo [ref=e64]:
+    - generic [ref=e66]: © 2026 EventFlow. جميع الحقوق محفوظة.
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=e73]:
+        - generic [ref=e77]: تم تسجيل الدخول باستخدام admin@eventflow.com
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "مساعد EventFlow" [level=3]
+          - paragraph: اسأل عن الفعاليات والأماكن والمزيد
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: مرحبًا!
+        - paragraph: يمكنني مساعدتك في اكتشاف الفعاليات والتعرّف على الأماكن والفئات وغيرها. ما الذي تود معرفته؟
+    - generic:
+      - button "الفعاليات القادمة"
+      - button "البحث حسب الفئة"
+      - button "الأماكن المتاحة"
+      - button "الحصول على التذاكر"
+    - generic:
+      - textbox "اسأل عن الفعاليات والأماكن والفئات..."
+      - button [disabled]
+  - button "المحادثة مع مساعد EventFlow" [ref=e67]

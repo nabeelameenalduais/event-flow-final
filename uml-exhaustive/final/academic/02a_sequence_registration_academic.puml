@@ -1,0 +1,68 @@
+@startuml
+header Diagram 1 - Registration flow (public & private)
+title Event Registration (registerForEvent)
+skinparam shadowing false
+
+actor Attendee as A
+boundary "Web UI" as U
+control "eventService" as S
+control "ticketService" as T
+control "notificationService" as N
+control "invitationService" as I
+database "Database" as D
+
+A -> U : submit registration (eventId, \nattendee email, optional invite code)
+U -> S : registerForEvent(eventId, payload)
+activate S
+  S -> D : load event (title, capacity, visibility,\nstatus, start/end, registration_deadline)
+  D --> S : event row
+  alt event missing / not published /\ndeadline passed / event ended
+    S --> U : error "Event not found" or "Registration closed"
+  else event is open
+    opt private event
+      S -> D : getLinkByCode(code)
+      D --> S : invite link (or null)
+      alt code invalid / used / wrong event /\nwrong email
+        S --> U : error "Invalid invitation link"
+      else valid link
+        S -> D : getRegistrationForAttendee(eventId, email)
+        D --> S : registration or null
+      end
+    end
+    opt public event
+      S -> D : getRegistrationForAttendee(eventId, email)
+      D --> S : registration or null
+    end
+    alt already registered
+      S --> U : error "Already registered"
+    else new registration
+      S -> D : count registrations with status = confirmed
+      D --> S : occupied seat count
+      alt capacity full
+        S -> D : insert registration (status = waitlisted)
+        D --> S : waitlist row
+        S -> N : sendNotification(user, "waitlist")
+      else seat available
+        S -> D : insert registration (status = confirmed)
+        D --> S : registration row
+        S -> T : generateTicketForRegistration(regId, title)
+        T --> S : ticket (unique_code + qr_code_url)
+        S -> N : sendNotification(user, "registration_confirmation")
+      end
+      opt private event (valid link)
+        S -> I : markLinkAsUsed(linkId)
+        I --> D : update used = true, used_at
+        S -> N : sendNotification(organizer, "invitation_used")
+      end
+    end
+  end
+S --> U : success screen (ticket / waitlist badge)
+deactivate S
+
+note bottom
+  Promotion waitlisted -> confirmed is done by the
+  organizer; trigger_waitlist_promotion then notifies
+  the attendee automatically. No "pending" state is
+  ever created.
+end note
+@enduml

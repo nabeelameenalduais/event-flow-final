@@ -1,0 +1,371 @@
+@startuml
+title EventFlow - Class Diagram (Academic)\n28 entities / 13 value types / 22 service modules
+skinparam shadowing false
+
+package "Identity & Access" {
+  class Role {
+    + id <<PK>>
+    + name : RoleName
+    + description : string
+  }
+  class User {
+    + id <<PK>>
+    + email : string
+    + createdAt : string
+    + updatedAt : string
+    + suspended? : boolean
+  }
+  class Profile {
+    + id <<PK>>
+    + userId <<FK>>
+    + firstName : string
+    + lastName : string
+    + phoneNumber : string
+    + avatarUrl : string
+    + roleId <<FK>>
+    + managesAllEvents? : boolean
+  }
+  class DeviceSession {
+    + id <<PK>>
+    + userId <<FK>>
+    + deviceName : string
+    + ipAddress : string
+    + token?
+    + isCurrent?
+    + lastActiveAt : string
+    + createdAt : string
+  }
+  class AuditLog {
+    + id <<PK>>
+    + action : AuditAction
+    + entityType : string
+    + entityId : string
+    + details : string
+    + ipAddress : string
+    + createdAt : string
+  }
+}
+
+package "Catalog" {
+  class Category {
+    + id <<PK>>
+    + name : string
+    + description : string
+    + iconUrl : string
+    + colorCode : string
+    + deletedAt?
+  }
+  class Venue {
+    + id <<PK>>
+    + name : string
+    + address : string
+    + capacity : number
+    + facilities : Record
+    + imageUrls : string[]
+    + deletedAt?
+  }
+  class Event {
+    + id <<PK>>
+    + title : string
+    + description : string
+    + coverImageUrl : string
+    + organizerId <<FK User>>
+    + venueId <<FK>>
+    + capacity : number
+    + registrationDeadline : string
+    + startDate : string
+    + endDate : string
+    + status : EventStatus
+    + visibility : EventVisibility
+    + contactEmail : string
+    + categoryId <<FK>>
+    + eventType : EventType
+    + meetingLink?
+    + meetingLinkGeneratedBy?
+    + deletedAt?
+  }
+  class EventOrganizer {
+    + id <<PK>>
+    + eventId <<FK>>
+    + userId <<FK>>
+    + isPrimary : boolean
+    + createdAt : string
+  }
+  class EventImage {
+    + id <<PK>>
+    + eventId <<FK>>
+    + imageUrl : string
+    + description : string
+  }
+  class Session {
+    + id <<PK>>
+    + eventId <<FK>>
+    + title : string
+    + description : string
+    + startTime : string
+    + endTime : string
+    + roomName : string
+  }
+  class Speaker {
+    + id <<PK>>
+    + sessionId <<FK>>
+    + name : string
+    + bio : string
+    + imageUrl : string
+  }
+}
+
+package "Registration & Attendance" {
+  class InvitationLink {
+    + id <<PK>>
+    + eventId <<FK>>
+    + email : string
+    + code : string
+    + used : boolean
+    + usedAt : string | null
+    + createdAt : string
+  }
+  class Registration {
+    + id <<PK>>
+    + eventId <<FK>>
+    + attendeeId <<FK Profile>>
+    + registeredAt : string
+    + status : RegistrationStatus
+  }
+  class Ticket {
+    + id <<PK>>
+    + registrationId <<FK>>
+    + uniqueCode : string
+    + qrCodeUrl : string
+    + issuedAt : string
+    + status : TicketStatus
+  }
+  class Attendance {
+    + id <<PK>>
+    + ticketId <<FK>>
+    + checkInTime : string
+    + checkOutTime : string
+  }
+}
+
+package "Engagement & Feedback" {
+  class Notification {
+    + id <<PK>>
+    + userId <<FK>>
+    + type : NotificationType
+    + message : string
+    + readAt : string | null
+    + createdAt : string
+    + link?
+  }
+  class ChatChannel {
+    + id <<PK>>
+    + eventId <<FK>>
+    + channelType : ChatChannelType
+    + organizerId? <<FK>>
+    + attendeeId? <<FK>>
+    + createdAt : string
+  }
+  class ChatMessage {
+    + id <<PK>>
+    + channelId <<FK>>
+    + senderId <<FK>>
+    + content : string
+    + createdAt : string
+  }
+  class Evaluation {
+    + id <<PK>>
+    + eventId <<FK>>
+    + title : string
+    + ratingType : RatingType
+    + privacy : EvaluationPrivacy
+    + createdBy <<FK>>
+    + createdAt : string
+  }
+  class EvaluationQuestion {
+    + id <<PK>>
+    + evaluationId <<FK>>
+    + question : string
+    + questionType : EvaluationQuestionType
+    + options : string[]
+    + sortOrder : number
+  }
+  class EvaluationSubmission {
+    + id <<PK>>
+    + evaluationId <<FK>>
+    + attendeeId <<FK>>
+    + rating : number | null
+    + isPublic : boolean
+    + createdAt : string
+  }
+  class EvaluationAnswer {
+    + id <<PK>>
+    + submissionId <<FK>>
+    + questionId <<FK>>
+    + answer : string | null
+  }
+  class Feedback {
+    + id <<PK>>
+    + eventId <<FK>>
+    + attendeeId <<FK>>
+    + rating : number
+    + comment : string
+    + submittedAt : string
+    + response?
+    + respondedAt?
+  }
+  class EventCost {
+    + id <<PK>>
+    + eventId <<FK>>
+    + costType : CostType
+    + item : string
+    + needType : string
+    + quantity : number
+    + unitPrice : number
+    + notes? : string
+    + createdBy <<FK>>
+    + createdAt : string
+    + updatedAt : string
+  }
+}
+
+package "Admin & Ops" {
+  class FileItem {
+    + id <<PK>>
+    + name : string
+    + url : string
+    + type : string
+    + size : number
+    + uploadedBy : string
+    + createdAt : string
+  }
+  class EmailTemplate {
+    + id <<PK>>
+    + type : string
+    + subject : string
+    + body : string
+  }
+  class AppSettings {
+    + appName : string
+    + timezone : string
+    + dateFormat : string
+    + primaryColor : string
+    + logoUrl : string
+    + faviconUrl : string
+  }
+}
+
+package "Value Types" {
+  enum RoleName {
+    admin
+    organizer
+    attendee
+  }
+  enum EventStatus {
+    draft
+    published
+    archived
+  }
+  enum EventVisibility {
+    public
+    private
+  }
+  enum EventType {
+    in_person
+    online
+  }
+  enum RegistrationStatus {
+    confirmed
+    cancelled
+    waitlisted
+  }
+  enum TicketStatus {
+    valid
+    used
+    invalid
+  }
+  enum NotificationType {
+    event_reminder
+    registration_confirmation
+    event_update
+    check_in
+    chat_message
+    invitation
+    invitation_used
+    waitlist_promotion
+    waitlist
+    evaluation
+  }
+  enum ChatChannelType {
+    general
+    private
+  }
+  enum RatingType {
+    numeric
+    stars
+  }
+  enum EvaluationPrivacy {
+    secret
+    public
+  }
+  enum EvaluationQuestionType {
+    multiple_choice
+    text
+  }
+  enum CostType {
+    planned
+    actual
+  }
+  enum AuditAction {
+    create
+    update
+    delete
+    login
+    logout
+    register
+    suspend
+    activate
+    publish
+    archive
+    check_in
+    check_out
+    cancel
+  }
+}
+
+' --- Relations ---
+Profile "*" --> "1" Role : roleId
+Profile "1" --> "1" User : userId
+DeviceSession "*" --> "1" User : userId
+AuditLog "*" --> "0..1" User : userId
+Event "*" --> "1" Category : categoryId
+Event "*" --> "1" Venue : venueId
+Event "*" --> "1" User : organizerId (primary)
+EventOrganizer "*" --> "1" Event : eventId
+EventOrganizer "*" --> "1" User : userId
+EventImage "*" --> "1" Event : eventId
+Session "*" --> "1" Event : eventId
+Speaker "*" --> "1" Session : sessionId
+InvitationLink "*" --> "1" Event : eventId
+Registration "*" --> "1" Event : eventId
+Registration "*" --> "1" Profile : attendeeId
+Ticket "1" --> "1" Registration : registrationId
+Attendance "1" --> "1" Ticket : ticketId
+Notification "*" --> "1" User : userId
+ChatChannel "*" --> "1" Event : eventId
+ChatMessage "*" --> "1" ChatChannel : channelId
+ChatMessage "*" --> "1" User : senderId
+Evaluation "*" --> "1" Event : eventId
+Evaluation "*" --> "1" User : createdBy
+EvaluationQuestion "*" --> "1" Evaluation : evaluationId
+EvaluationSubmission "*" --> "1" Evaluation : evaluationId
+EvaluationSubmission "*" --> "1" Profile : attendeeId
+EvaluationAnswer "*" --> "1" EvaluationSubmission : submissionId
+EvaluationAnswer "*" --> "1" EvaluationQuestion : questionId
+Feedback "*" --> "1" Event : eventId
+Feedback "*" --> "1" Profile : attendeeId
+EventCost "*" --> "1" Event : eventId
+FileItem "*" --> "1" User : uploadedBy
+AppSettings "1" --> "0..*" EmailTemplate : emailTemplates
+
+@enduml

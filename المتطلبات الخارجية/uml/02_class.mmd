@@ -1,0 +1,266 @@
+---
+title: EventFlow — Class Diagram
+---
+%% Domain classes = src/types/index.ts (each maps 1:1 to a real table in supabase/schema.sql).
+%% EVERY multiplicity below is grounded in an FK / UNIQUE constraint (see UML_DOCUMENTATION.md).
+%% No relationship is inferred from naming alone.
+
+classDiagram
+direction LR
+
+class User {
+  +id: string
+  +email: string
+  +createdAt: string
+  +suspended?: boolean
+}
+class Profile {
+  +id: string
+  +userId: string
+  +firstName: string
+  +lastName: string
+  +roleId: string
+  +managesAllEvents?: boolean
+}
+class Role {
+  +id: string
+  +name: RoleName
+}
+class Category {
+  +id: string
+  +name: string
+}
+class Venue {
+  +id: string
+  +name: string
+  +capacity: number
+}
+class Event {
+  +id: string
+  +title: string
+  +organizerId: string
+  +venueId: string
+  +categoryId: string
+  +status: EventStatus
+  +visibility: EventVisibility
+  +eventType: EventType
+  +meetingLinkGeneratedBy?: string
+}
+class EventOrganizer {
+  +id: string
+  +eventId: string
+  +userId: string
+  +isPrimary: boolean
+}
+class Session {
+  +id: string
+  +eventId: string
+  +title: string
+}
+class Speaker {
+  +id: string
+  +sessionId: string
+  +name: string
+}
+class Registration {
+  +id: string
+  +eventId: string
+  +attendeeId: string
+  +status: RegistrationStatus
+}
+class Ticket {
+  +id: string
+  +registrationId: string
+  +uniqueCode: string
+  +status: TicketStatus
+}
+class Attendance {
+  +id: string
+  +ticketId: string
+  +checkInTime: string
+  +checkOutTime: string
+}
+class InvitationLink {
+  +id: string
+  +eventId: string
+  +email: string
+  +code: string
+  +used: boolean
+}
+class ChatChannel {
+  +id: string
+  +eventId: string
+  +channelType: ChatChannelType
+  +organizerId: string | null
+  +attendeeId?: string | null
+}
+class ChatMessage {
+  +id: string
+  +channelId: string
+  +senderId: string
+}
+class ChatMessageWithSender {
+  +senderName: string
+  +senderRole?: string
+}
+class Feedback {
+  +id: string
+  +eventId: string
+  +attendeeId: string
+  +rating: number
+}
+class Evaluation {
+  +id: string
+  +eventId: string
+  +title: string
+  +createdBy: string
+}
+class EvaluationQuestion {
+  +id: string
+  +evaluationId: string
+  +questionType: EvaluationQuestionType
+}
+class EvaluationSubmission {
+  +id: string
+  +evaluationId: string
+  +attendeeId: string
+}
+class EvaluationAnswer {
+  +id: string
+  +submissionId: string
+  +questionId: string
+}
+class EventCost {
+  +id: string
+  +eventId: string
+  +costType: CostType
+  +createdBy: string
+}
+class Notification {
+  +id: string
+  +userId: string
+  +type: NotificationType
+}
+class FileItem {
+  +id: string
+  +uploadedBy: string
+}
+class AuditLog {
+  +id: string
+  +userId: string
+  +action: AuditAction
+}
+class DeviceSession {
+  +id: string
+  +userId: string
+  +deviceName: string
+}
+
+%% --- Relationships (FK / UNIQUE constraint evidence from supabase/schema.sql) ---
+
+User "1" --> "1" Profile : profiles.user_id UNIQUE
+Role "1" --> "N" Profile : profiles.role_id FK
+Category "1" --> "N" Event : events.category_id FK
+Venue "1" --> "N" Event : events.venue_id FK (nullable)
+Profile "1" --> "N" Event : events.organizer_id FK -> profiles.id
+User "1" --> "N" Event : events.meeting_link_generated_by FK (nullable)
+Event "N" --> "M" User : "event_organizers UNIQUE (event_id, user_id)"
+Event "1" --> "N" EventOrganizer : FK
+User "1" --> "N" EventOrganizer : FK
+Event "1" --> "N" Session : sessions.event_id FK
+Session "1" --> "N" Speaker : speakers.session_id FK
+Event "1" --> "N" Registration : registrations.event_id FK
+Profile "1" --> "N" Registration : registrations.attendee_id FK -> profiles.id
+Registration "1" --> "1" Ticket : tickets.registration_id UNIQUE
+Ticket "1" --> "N" Attendance : attendance.ticket_id FK (app expects <=1)
+Event "1" --> "N" InvitationLink : invitation_links.event_id FK
+Event "1" --> "N" ChatChannel : chat_channels.event_id FK
+User "1" --> "N" ChatChannel : chat_channels.organizer_id FK (nullable)
+Profile "1" --> "N" ChatChannel : chat_channels.attendee_id FK (nullable)
+ChatChannel "1" --> "N" ChatMessage : chat_messages.channel_id FK
+User "1" --> "N" ChatMessage : chat_messages.sender_id FK -> users.id
+ChatMessage <|-- ChatMessageWithSender : extends (application-level, no table)
+Event "1" --> "N" Feedback : feedback.event_id FK
+Profile "1" --> "N" Feedback : feedback.attendee_id FK -> profiles.id
+Event "1" --> "N" Evaluation : evaluations.event_id FK (app enforces 1)
+User "1" --> "N" Evaluation : evaluations.created_by FK
+Evaluation "1" --> "N" EvaluationQuestion : evaluation_questions.evaluation_id FK
+Evaluation "1" --> "N" EvaluationSubmission : evaluation_submissions.evaluation_id FK
+Profile "1" --> "N" EvaluationSubmission : evaluation_submissions.attendee_id FK
+EvaluationSubmission "1" --> "N" EvaluationAnswer : evaluation_answers.submission_id FK
+EvaluationQuestion "1" --> "N" EvaluationAnswer : evaluation_answers.question_id FK
+Event "1" --> "N" EventCost : event_costs.event_id FK
+User "1" --> "N" EventCost : event_costs.created_by FK
+User "1" --> "N" Notification : notifications.user_id FK
+Profile "1" --> "N" FileItem : files.uploaded_by FK -> profiles.id
+User "1" --> "N" AuditLog : audit_logs.user_id FK
+User "1" --> "N" DeviceSession : device_sessions.user_id FK
+
+%% --- Service modules (exported functions only; not part of the DB relation graph) ---
+class authService {
+  login(email, password)
+  register(email, password, firstName, lastName)
+  restoreSession(token)
+  revokeSession(token)
+  requestPasswordReset(email)
+  resetPasswordWithToken(token, newPassword)
+}
+class eventService {
+  createEvent(data)
+  updateEvent(id, data)
+  publishEvent(id)
+  archiveEvent(id)
+  setDraft(id)
+  registerForEvent(eventId, attendeeId, code?)
+  cancelRegistration(id)
+}
+class attendanceService {
+  checkIn(ticketId)
+  checkOut(attendanceId)
+  findTicketByCode(code)
+  findTicketByAttendee(eventId, attendeeId)
+}
+class ticketService {
+  getTicketForOwner(id, attendeeProfileId)
+  downloadTicket(ticketId)
+}
+class invitationService
+class evaluationService {
+  createEvaluation(...)
+  updateEvaluation(...)
+  submitEvaluation(...)
+  getSubmissions(evaluationId, privacy)
+}
+class chatService {
+  ensureGeneralChannel(eventId)
+  ensurePrivateChannel(...)
+  sendMessage(channelId, senderId, content)
+}
+class costService {
+  createCost(...)
+  updateCost(...)
+  deleteCost(id)
+}
+class notificationService
+class userService
+class venueService
+class categoryService
+class feedbackService {
+  submitFeedback(data)
+  respondToFeedback(feedbackId, response)
+}
+class auditService {
+  logAction(...)
+}
+class deviceSessionService {
+  createDeviceSession(userId)
+  deleteDeviceSession(userId, sessionId)
+}
+class fileService {
+  uploadFile(...)
+  deleteFile(id)
+}
+class reportsService
+class settingsService
+class organizerService
+class dashboardService

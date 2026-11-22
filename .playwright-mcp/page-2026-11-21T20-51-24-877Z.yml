@@ -1,0 +1,340 @@
+- generic [ref=f10e5]:
+  - complementary [ref=f10e6]:
+    - link "EventFlow" [ref=f10e8] [cursor=pointer]:
+      - /url: /dashboard
+    - navigation [ref=f10e10]:
+      - link "Dashboard" [ref=f10e11] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Browse Events" [ref=f10e17] [cursor=pointer]:
+        - /url: /events
+      - link "Event Requests" [ref=f10e20] [cursor=pointer]:
+        - /url: /dashboard/event-requests
+      - link "My Events" [ref=f10e23] [cursor=pointer]:
+        - /url: /dashboard/events
+      - link "Bans" [ref=f10e27] [cursor=pointer]:
+        - /url: /dashboard/bans
+      - link "Finance" [ref=f10e31] [cursor=pointer]:
+        - /url: /dashboard/finance
+      - link "Audience" [ref=f10e35] [cursor=pointer]:
+        - /url: /dashboard/audience
+      - link "Campaigns" [ref=f10e41] [cursor=pointer]:
+        - /url: /dashboard/campaigns
+      - link "Users" [ref=f10e45] [cursor=pointer]:
+        - /url: /dashboard/admin/users
+      - link "Categories" [ref=f10e58] [cursor=pointer]:
+        - /url: /dashboard/admin/categories
+      - link "Venues" [ref=f10e63] [cursor=pointer]:
+        - /url: /dashboard/admin/venues
+      - link "Files" [ref=f10e68] [cursor=pointer]:
+        - /url: /dashboard/admin/files
+      - link "Reports" [ref=f10e73] [cursor=pointer]:
+        - /url: /dashboard/admin/reports
+      - link "Broadcast" [ref=f10e76] [cursor=pointer]:
+        - /url: /dashboard/admin/broadcast
+      - link "Password Resets" [ref=f10e80] [cursor=pointer]:
+        - /url: /dashboard/admin/password-resets
+      - link "Settings" [ref=f10e84] [cursor=pointer]:
+        - /url: /dashboard/admin/settings
+      - link "Security" [ref=f10e88] [cursor=pointer]:
+        - /url: /dashboard/admin/security
+  - generic [ref=f10e91]:
+    - banner [ref=f10e92]:
+      - generic [ref=f10e94]:
+        - button "Language" [ref=f10e95]:
+          - generic [ref=f10e99]: English
+        - button "Toggle theme" [ref=f10e100]
+        - button "Notifications" [ref=f10e103]
+        - button "AA Alice Admin admin" [ref=f10e107]:
+          - generic [ref=f10e108]: AA
+          - generic [ref=f10e110]:
+            - paragraph [ref=f10e111]: Alice Admin
+            - paragraph [ref=f10e112]: admin
+    - main [ref=f10e115]:
+      - generic [ref=f10e561]:
+        - generic [ref=f10e562]:
+          - heading "My Events" [level=1] [ref=f10e563]
+          - button "Create Event" [ref=f10e564]
+        - paragraph [ref=f10e565]: Showing all events (admin view)
+        - generic [ref=f10e566]:
+          - textbox "Search events..." [ref=f10e571]
+          - combobox [ref=f10e572]:
+            - generic: All statuses
+          - combobox [ref=f10e575]:
+            - generic: All visibilities
+          - combobox [ref=f10e578]:
+            - generic: Newest first
+        - generic [ref=f10e584]:
+          - generic [ref=f10e585]:
+            - generic [ref=f10e587]:
+              - generic [ref=f10e588]:
+                - generic [ref=f10e589]: QA-MYEVENTS-FIX-ACTION
+                - generic [ref=f10e590]: published
+                - generic [ref=f10e591]: Public
+              - generic [ref=f10e592]:
+                - generic [ref=f10e593]: 12/2/2026
+                - generic [ref=f10e596]: Grand Convention Center
+                - generic [ref=f10e600]: 100 spots
+            - generic [ref=f10e606]:
+              - button "Registrations" [ref=f10e607]
+              - button "Attendance" [ref=f10e608]
+              - button "Schedule" [ref=f10e609]
+              - button "Costs" [ref=f10e610]
+              - button "Evaluation" [ref=f10e611]
+              - button "Chat" [ref=f10e612]
+              - button "Organizers" [ref=f10e613]
+              - button "View" [ref=f10e614]
+              - button "Edit" [ref=f10e615]
+              - button "Send Reminder" [ref=f10e616]
+              - button "Archive" [ref=f10e617]
+              - button "Unpublish" [ref=f10e618]
+              - button "Duplicate" [ref=f10e619]
+              - button "Delete" [ref=f10e620]
+          - generic [ref=f10e621]:
+            - generic [ref=f10e623]:
+              - generic [ref=f10e624]:
+                - generic [ref=f10e625]: Data Science Bootcamp
+                - generic [ref=f10e626]: published
+                - generic [ref=f10e627]: Public
+              - generic [ref=f10e628]:
+                - generic [ref=f10e629]: 10/15/2026
+                - generic [ref=f10e632]: Tech Hub Auditorium
+                - generic [ref=f10e636]: 60 spots
+            - generic [ref=f10e642]:
+              - button "Registrations" [ref=f10e643]
+              - button "Attendance" [ref=f10e644]
+              - button "Schedule" [ref=f10e645]
+              - button "Costs" [ref=f10e646]
+              - button "Evaluation" [ref=f10e647]
+              - button "Chat" [ref=f10e648]
+              - button "Organizers" [ref=f10e649]
+              - button "View" [ref=f10e650]
+              - button "Edit" [ref=f10e651]
+              - button "Send Reminder" [ref=f10e652]
+              - button "Archive" [ref=f10e653]
+              - button "Unpublish" [ref=f10e654]
+              - button "Duplicate" [ref=f10e655]
+              - button "Delete" [ref=f10e656]
+          - generic [ref=f10e657]:
+            - generic [ref=f10e659]:
+              - generic [ref=f10e660]:
+                - generic [ref=f10e661]: DevOps Days
+                - generic [ref=f10e662]: published
+                - generic [ref=f10e663]: Public
+              - generic [ref=f10e664]:
+                - generic [ref=f10e665]: 10/1/2026
+                - generic [ref=f10e668]: Grand Convention Center
+                - generic [ref=f10e672]: 400 spots
+            - generic [ref=f10e678]:
+              - button "Registrations" [ref=f10e679]
+              - button "Attendance" [ref=f10e680]
+              - button "Schedule" [ref=f10e681]
+              - button "Costs" [ref=f10e682]
+              - button "Evaluation" [ref=f10e683]
+              - button "Chat" [ref=f10e684]
+              - button "Organizers" [ref=f10e685]
+              - button "View" [ref=f10e686]
+              - button "Edit" [ref=f10e687]
+              - button "Send Reminder" [ref=f10e688]
+              - button "Archive" [ref=f10e689]
+              - button "Unpublish" [ref=f10e690]
+              - button "Duplicate" [ref=f10e691]
+              - button "Delete" [ref=f10e692]
+          - generic [ref=f10e693]:
+            - generic [ref=f10e695]:
+              - generic [ref=f10e696]:
+                - generic [ref=f10e697]: AI a
+                - generic [ref=f10e698]: published
+                - generic [ref=f10e699]: Private
+              - generic [ref=f10e700]:
+                - generic [ref=f10e701]: 9/24/2026
+                - generic [ref=f10e704]: Grand Convention Center
+                - generic [ref=f10e708]: 100 spots
+            - generic [ref=f10e714]:
+              - button "Registrations" [ref=f10e715]
+              - button "Invitations" [ref=f10e716]
+              - button "Attendance" [ref=f10e717]
+              - button "Schedule" [ref=f10e718]
+              - button "Costs" [ref=f10e719]
+              - button "Evaluation" [ref=f10e720]
+              - button "Chat" [ref=f10e721]
+              - button "Organizers" [ref=f10e722]
+              - button "View" [ref=f10e723]
+              - button "Edit" [ref=f10e724]
+              - button "Send Reminder" [ref=f10e725]
+              - button "Archive" [ref=f10e726]
+              - button "Unpublish" [ref=f10e727]
+              - button "Duplicate" [ref=f10e728]
+              - button "Delete" [ref=f10e729]
+          - generic [ref=f10e730]:
+            - generic [ref=f10e732]:
+              - generic [ref=f10e733]:
+                - generic [ref=f10e734]: Draft Planning Session
+                - generic [ref=f10e735]: draft
+                - generic [ref=f10e736]: Private
+              - generic [ref=f10e737]:
+                - generic [ref=f10e738]: 9/10/2026
+                - generic [ref=f10e741]: Grand Convention Center
+                - generic [ref=f10e745]: 20 spots
+            - generic [ref=f10e751]:
+              - button "Registrations" [ref=f10e752]
+              - button "Invitations" [ref=f10e753]
+              - button "Attendance" [ref=f10e754]
+              - button "Schedule" [ref=f10e755]
+              - button "Costs" [ref=f10e756]
+              - button "Evaluation" [ref=f10e757]
+              - button "Chat" [ref=f10e758]
+              - button "Organizers" [ref=f10e759]
+              - button "View" [ref=f10e760]
+              - button "Edit" [ref=f10e761]
+              - button "Publish" [ref=f10e762]
+              - button "Duplicate" [ref=f10e763]
+              - button "Delete" [ref=f10e764]
+          - generic [ref=f10e765]:
+            - generic [ref=f10e767]:
+              - generic [ref=f10e768]:
+                - generic [ref=f10e769]: Product Launch Meetup
+                - generic [ref=f10e770]: published
+                - generic [ref=f10e771]: Public
+              - generic [ref=f10e772]:
+                - generic [ref=f10e773]: 9/5/2026
+                - generic [ref=f10e776]: Tech Hub Auditorium
+                - generic [ref=f10e780]: 120 spots
+            - generic [ref=f10e786]:
+              - button "Registrations" [ref=f10e787]
+              - button "Attendance" [ref=f10e788]
+              - button "Schedule" [ref=f10e789]
+              - button "Costs" [ref=f10e790]
+              - button "Evaluation" [ref=f10e791]
+              - button "Chat" [ref=f10e792]
+              - button "Organizers" [ref=f10e793]
+              - button "View" [ref=f10e794]
+              - button "Edit" [ref=f10e795]
+              - button "Send Reminder" [ref=f10e796]
+              - button "Archive" [ref=f10e797]
+              - button "Unpublish" [ref=f10e798]
+              - button "Duplicate" [ref=f10e799]
+              - button "Delete" [ref=f10e800]
+          - generic [ref=f10e801]:
+            - generic [ref=f10e803]:
+              - generic [ref=f10e804]:
+                - generic [ref=f10e805]: لمولد النبوي (Copy)
+                - generic [ref=f10e806]: draft
+                - generic [ref=f10e807]: Private
+              - generic [ref=f10e808]:
+                - generic [ref=f10e809]: 8/22/2026
+                - generic [ref=f10e812]: Grand Convention Center
+                - generic [ref=f10e816]: 100 spots
+            - generic [ref=f10e822]:
+              - button "Registrations" [ref=f10e823]
+              - button "Invitations" [ref=f10e824]
+              - button "Attendance" [ref=f10e825]
+              - button "Schedule" [ref=f10e826]
+              - button "Costs" [ref=f10e827]
+              - button "Evaluation" [ref=f10e828]
+              - button "Chat" [ref=f10e829]
+              - button "Organizers" [ref=f10e830]
+              - button "View" [ref=f10e831]
+              - button "Edit" [ref=f10e832]
+              - button "Publish" [ref=f10e833]
+              - button "Duplicate" [ref=f10e834]
+              - button "Delete" [ref=f10e835]
+          - generic [ref=f10e836]:
+            - generic [ref=f10e838]:
+              - generic [ref=f10e839]:
+                - generic [ref=f10e840]: لمولد النبوي
+                - generic [ref=f10e841]: draft
+                - generic [ref=f10e842]: Public
+              - generic [ref=f10e843]:
+                - generic [ref=f10e844]: 8/22/2026
+                - generic [ref=f10e847]: Grand Convention Center
+                - generic [ref=f10e851]: 100 spots
+            - generic [ref=f10e857]:
+              - button "Registrations" [ref=f10e858]
+              - button "Attendance" [ref=f10e859]
+              - button "Schedule" [ref=f10e860]
+              - button "Costs" [ref=f10e861]
+              - button "Evaluation" [ref=f10e862]
+              - button "Chat" [ref=f10e863]
+              - button "Organizers" [ref=f10e864]
+              - button "View" [ref=f10e865]
+              - button "Edit" [ref=f10e866]
+              - button "Publish" [ref=f10e867]
+              - button "Duplicate" [ref=f10e868]
+              - button "Delete" [ref=f10e869]
+          - generic [ref=f10e870]:
+            - generic [ref=f10e872]:
+              - generic [ref=f10e873]:
+                - generic [ref=f10e874]: Hackathon 2026
+                - generic [ref=f10e875]: published
+                - generic [ref=f10e876]: Public
+              - generic [ref=f10e877]:
+                - generic [ref=f10e878]: 8/22/2026
+                - generic [ref=f10e881]: Grand Convention Center
+                - generic [ref=f10e885]: 200 spots
+            - generic [ref=f10e891]:
+              - button "Registrations" [ref=f10e892]
+              - button "Attendance" [ref=f10e893]
+              - button "Schedule" [ref=f10e894]
+              - button "Costs" [ref=f10e895]
+              - button "Evaluation" [ref=f10e896]
+              - button "Chat" [ref=f10e897]
+              - button "Organizers" [ref=f10e898]
+              - button "View" [ref=f10e899]
+              - button "Edit" [ref=f10e900]
+              - button "Send Reminder" [ref=f10e901]
+              - button "Archive" [ref=f10e902]
+              - button "Unpublish" [ref=f10e903]
+              - button "Duplicate" [ref=f10e904]
+              - button "Delete" [ref=f10e905]
+          - generic [ref=f10e906]:
+            - generic [ref=f10e908]:
+              - generic [ref=f10e909]:
+                - generic [ref=f10e910]: s
+                - generic [ref=f10e911]: published
+                - generic [ref=f10e912]: Private
+              - generic [ref=f10e913]:
+                - generic [ref=f10e914]: 8/14/2026
+                - generic [ref=f10e917]: Grand Convention Center
+                - generic [ref=f10e921]: 100 spots
+            - generic [ref=f10e927]:
+              - button "Registrations" [ref=f10e928]
+              - button "Invitations" [ref=f10e929]
+              - button "Attendance" [ref=f10e930]
+              - button "Schedule" [ref=f10e931]
+              - button "Costs" [ref=f10e932]
+              - button "Evaluation" [ref=f10e933]
+              - button "Chat" [ref=f10e934]
+              - button "Organizers" [ref=f10e935]
+              - button "View" [ref=f10e936]
+              - button "Edit" [ref=f10e937]
+              - button "Send Reminder" [ref=f10e938]
+              - button "Archive" [ref=f10e939]
+              - button "Unpublish" [ref=f10e940]
+              - button "Duplicate" [ref=f10e941]
+              - button "Delete" [ref=f10e942]
+        - generic [ref=f10e943]:
+          - button "Previous" [disabled]
+          - generic [ref=f10e944]: Page 1 of 3
+          - button "Next" [ref=f10e945]
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "EventFlow Assistant" [level=3]
+          - paragraph: Ask about events, venues & more
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: Hi there!
+        - paragraph: I can help you discover events, check venues, explore categories, and more. What would you like to know?
+    - generic:
+      - button "Upcoming events"
+      - button "Find by category"
+      - button "Available venues"
+      - button "Get tickets"
+    - generic:
+      - textbox "Ask about events, venues, categories..."
+      - button [disabled]
+  - button "Chat with EventFlow Assistant" [ref=f10e169]

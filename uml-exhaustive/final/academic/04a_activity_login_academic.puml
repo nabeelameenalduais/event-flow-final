@@ -1,0 +1,28 @@
+@startuml
+title Activity - Login (Academic)
+skinparam shadowing false
+start
+:Open login page;
+:Enter email & password;
+:Submit login;
+:Apply rate limit (30 per 60 s);
+if (Within rate limit?) then (yes)
+else (no)
+  :Error "Too many attempts";
+  stop
+endif
+:Call rpc authenticate_user;
+if (RPC function missing - PGRST202?) then (yes)
+  :legacyLogin - SHA-256 verification;
+else (no)
+endif
+if (Credentials valid?) then (yes)
+  :Create device session (createDeviceSession);
+  :Save session token (localStorage "eventflow_session");
+  :logAction("login");
+  :Navigate to /dashboard;
+else (no)
+  :Error "Invalid email or password";
+endif
+stop
+@enduml

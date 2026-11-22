@@ -1,0 +1,47 @@
+stateDiagram-v2
+    direction LR
+
+    %% ==================================================================
+    %% EventFlow - EVENT LIFECYCLE state machine (publication states)
+    %% Matched to src/services/eventService.ts:
+    %%   createEvent (status="draft"), publishEvent (-> "published"),
+    %%   setDraft (-> "draft"), archiveEvent (-> "archived"),
+    %%   republish: publishEvent again (-> "published").
+    %% Registration is accepted only while the event is Published
+    %% (registerForEvent throws "This event is not open for registration").
+    %% Soft delete (deleted_at) is a separate mechanism and is NOT a state.
+    %% ==================================================================
+
+    classDef normal   fill:#eef4ff,stroke:#0b3d91,stroke-width:1.5;
+    classDef published fill:#e6f7ee,stroke:#1a7f37,stroke-width:1.5;
+    classDef archived fill:#eef0f3,stroke:#64748b,stroke-width:1.5;
+    classDef note     fill:#fff9e6,stroke:#d9a441,stroke-width:1.2,stroke-dasharray:4 3;
+
+    [*] --> Draft : create event\n(status = "draft")
+
+    Draft --> Published : publish\npublishEvent()
+    Published --> Draft : unpublish\nsetDraft()
+    Published --> Archived : archive\narchiveEvent()
+    Archived --> Published : republish\npublishEvent()
+
+    Draft --> [*] : delete (soft)\ndeleted_at = now
+
+    note right of Published
+      Only "published" events accept registrations
+      (registerForEvent guard).
+      Un-published events are hidden from visitors.
+    end note
+
+    note left of Draft
+      New events always start as draft.
+      DuplicateEvent clones as draft + private.
+    end note
+
+    note left of Archived
+      An archived event can be re-published.
+      Passing the event end date does not archive it.
+    end note
+
+    class Draft normal;
+    class Published published;
+    class Archived archived;

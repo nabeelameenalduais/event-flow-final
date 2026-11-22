@@ -1,0 +1,81 @@
+- generic [ref=f11e90]:
+  - banner [ref=f11e91]:
+    - generic [ref=f11e93]:
+      - link "EventFlow" [ref=f11e94] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=f11e96]:
+        - link "الرئيسية" [ref=f11e97] [cursor=pointer]:
+          - /url: /
+        - link "الفعاليات" [ref=f11e98] [cursor=pointer]:
+          - /url: /events
+        - link "عن المنصة" [ref=f11e99] [cursor=pointer]:
+          - /url: /about
+        - link "اتصل بنا" [ref=f11e100] [cursor=pointer]:
+          - /url: /contact
+      - generic [ref=f11e101]:
+        - button "اللغة" [ref=f11e102]:
+          - generic [ref=f11e106]: العربية
+        - button "تغيير المظهر" [ref=f11e107]
+        - link "تسجيل الدخول" [ref=f11e110] [cursor=pointer]:
+          - /url: /login
+        - link "إنشاء حساب" [ref=f11e111] [cursor=pointer]:
+          - /url: /register
+  - main [ref=f11e112]:
+    - generic [ref=f11e117]:
+      - generic [ref=f11e118]:
+        - heading "تسجيل الدخول" [level=1] [ref=f11e123]
+        - paragraph [ref=f11e124]: مرحبًا بعودتك إلى EventFlow
+      - generic [ref=f11e125]:
+        - generic [ref=f11e126]:
+          - generic [ref=f11e127]: البريد الإلكتروني
+          - textbox "you@example.com" [ref=f11e128]
+        - generic [ref=f11e129]:
+          - generic [ref=f11e130]: كلمة المرور
+          - textbox "أدخل كلمة المرور" [ref=f11e131]
+        - button "تسجيل الدخول" [ref=f11e132]
+        - generic [ref=f11e133]:
+          - link "نسيت كلمة المرور؟" [ref=f11e134] [cursor=pointer]:
+            - /url: /forgot-password
+          - link "إنشاء حساب" [ref=f11e135] [cursor=pointer]:
+            - /url: /register
+        - paragraph [ref=f11e136]:
+          - text: حذفت حسابك؟
+          - link "استعده خلال فترة الاسترداد" [ref=f11e137] [cursor=pointer]:
+            - /url: /restore-account
+      - generic [ref=f11e138]:
+        - paragraph [ref=f11e139]: تسجيل دخول تجريبي سريع
+        - generic [ref=f11e140]:
+          - button "مدير admin@eventflow.com / one" [ref=f11e141]:
+            - generic [ref=f11e142]: مدير
+            - generic [ref=f11e143]: admin@eventflow.com / one
+          - button "منظّم organizer@eventflow.com / one" [ref=f11e144]:
+            - generic [ref=f11e145]: منظّم
+            - generic [ref=f11e146]: organizer@eventflow.com / one
+          - button "مشارك attendee@eventflow.com / one" [ref=f11e147]:
+            - generic [ref=f11e148]: مشارك
+            - generic [ref=f11e149]: attendee@eventflow.com / one
+        - paragraph [ref=f11e150]: انقر على الدور لتسجيل الدخول فورًا.
+  - contentinfo [ref=f11e151]:
+    - generic [ref=f11e153]: © 2026 EventFlow. جميع الحقوق محفوظة.
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "مساعد EventFlow" [level=3]
+          - paragraph: اسأل عن الفعاليات والأماكن والمزيد
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: مرحبًا!
+        - paragraph: يمكنني مساعدتك في اكتشاف الفعاليات والتعرّف على الأماكن والفئات وغيرها. ما الذي تود معرفته؟
+    - generic:
+      - button "الفعاليات القادمة"
+      - button "البحث حسب الفئة"
+      - button "الأماكن المتاحة"
+      - button "الحصول على التذاكر"
+    - generic:
+      - textbox "اسأل عن الفعاليات والأماكن والفئات..."
+      - button [disabled]
+  - button "المحادثة مع مساعد EventFlow" [ref=f11e154]

@@ -1,0 +1,236 @@
+@startuml use_case_diagram
+' EventFlow — source-verified UML 2.x use case model.
+' Scope: functionality implemented in this repository. Abstract actors are shown
+' with the <<abstract>> stereotype and inherit the use cases of their base role.
+
+title EventFlow — UML 2.x Use Case Diagram\nImplemented functionality (source-verified)
+
+left to right direction
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 26
+skinparam ranksep 60
+
+skinparam actorFontName Arial
+skinparam actorFontSize 13
+skinparam actorFontColor #1F2937
+skinparam actorBorderColor #2F5597
+skinparam actorBackgroundColor #EAF1FB
+
+skinparam usecaseFontName Arial
+skinparam usecaseFontSize 12
+skinparam usecaseFontColor #1F2937
+skinparam usecaseBorderColor #2F5597
+skinparam usecaseBackgroundColor #F8FBFF
+
+skinparam packageFontName Arial
+skinparam packageFontSize 13
+skinparam packageFontStyle bold
+skinparam packageFontColor #243B53
+skinparam packageBorderColor #8EA9C1
+skinparam packageBackgroundColor #F4F7FA
+
+skinparam rectangleFontName Arial
+skinparam rectangleFontSize 16
+skinparam rectangleFontStyle bold
+skinparam rectangleFontColor #1F3A5F
+skinparam rectangleBorderColor #2F5597
+skinparam rectangleBorderThickness 2
+skinparam rectangleBackgroundColor #FFFFFF
+
+skinparam noteFontName Arial
+skinparam noteFontSize 10
+skinparam noteFontColor #4B5563
+skinparam noteBorderColor #B8C4CE
+skinparam noteBackgroundColor #FFFDF5
+
+skinparam arrowColor #5B6773
+skinparam arrowFontSize 10
+
+' ---------------------------------------------------------------------------
+' Actors outside the system boundary
+' ---------------------------------------------------------------------------
+
+actor "Platform User" as PlatformUser <<abstract>>
+actor "Visitor" as Visitor
+actor "Registered User" as RegisteredUser <<abstract>>
+actor "Attendee" as Attendee
+actor "Organizer" as Organizer
+actor "Administrator" as Administrator
+
+actor "Email Service" as EmailService
+actor "Jitsi Meet" as JitsiMeet
+actor "EventFlow Assistant" as AssistantActor
+
+' Role generalization. Administrator inherits Organizer behavior because admin
+' accounts pass organizer route guards and canManageEvent() returns true.
+PlatformUser <|-- Visitor
+PlatformUser <|-- RegisteredUser
+RegisteredUser <|-- Attendee
+RegisteredUser <|-- Organizer
+Organizer <|-- Administrator
+
+' ---------------------------------------------------------------------------
+' System boundary and use cases
+' ---------------------------------------------------------------------------
+
+rectangle "EventFlow Event Management System" as System {
+
+  package "Account & Access" as PkgAccount {
+    usecase "Register Account" as UC_RegisterAccount
+    usecase "Log In" as UC_LogIn
+    usecase "Recover Account Access" as UC_RecoverAccount
+    usecase "Restore Deleted Account" as UC_RestoreDeletedAccount
+    usecase "View Dashboard and Notifications" as UC_ViewDashboard
+    usecase "Manage Account" as UC_ManageAccount
+    usecase "Submit and Track Event Request" as UC_SubmitEventRequest
+  }
+
+  package "Event Discovery" as PkgDiscovery {
+    usecase "Browse Events" as UC_BrowseEvents
+    usecase "View Event Details" as UC_ViewEventDetails
+    usecase "Ask EventFlow Assistant" as UC_AskAssistant
+    usecase "Access Private Event\nvia Invitation Code" as UC_AccessPrivateEvent
+  }
+
+  package "Event Participation" as PkgParticipation {
+    usecase "Register for Event" as UC_RegisterForEvent
+    usecase "Cancel Registration" as UC_CancelRegistration
+    usecase "View and Download E-Ticket" as UC_ViewDownloadETicket
+    usecase "Submit Event Review" as UC_SubmitReview
+    usecase "Submit Event Evaluation" as UC_SubmitEvaluation
+    usecase "Participate in Event Chat" as UC_ParticipateChat
+    usecase "Join Online Meeting" as UC_JoinMeeting
+    usecase "Join Event Waitlist" as UC_JoinWaitlist
+  }
+
+  package "Event Operations" as PkgOperations {
+    usecase "Create/Edit Event" as UC_CreateEditEvent
+    usecase "Manage Event Lifecycle" as UC_ManageLifecycle
+    usecase "Manage Registrations\nand Invitations" as UC_ManageRegistrationsInvitations
+    usecase "Manage Schedule and Speakers" as UC_ManageScheduleSpeakers
+    usecase "Perform Check-In/Check-Out" as UC_PerformCheckInOut
+    usecase "Manage Event Finances" as UC_ManageFinances
+    usecase "Manage Evaluation\nand Feedback" as UC_ManageFeedback
+    usecase "Initiate User Ban\nor Revocation" as UC_InitiateBanRevocation
+    usecase "Manage Audience\nand Campaigns" as UC_ManageAudienceCampaigns
+  }
+
+  package "Platform Administration" as PkgAdministration {
+    usecase "Manage Users, Roles,\nand Password Resets" as UC_ManageUsersRolesPasswords
+    usecase "Manage Reference Data\nand Files" as UC_ManageReferenceDataFiles
+    usecase "View Reports and Analytics" as UC_ViewReportsAnalytics
+    usecase "Configure System Settings\nand Email Templates" as UC_ConfigureSettingsTemplates
+    usecase "Monitor Security\nand Audit Logs" as UC_MonitorSecurityAudit
+    usecase "Broadcast Admin Message" as UC_BroadcastMessage
+    usecase "Assign Event Organizers" as UC_AssignOrganizers
+    usecase "Review Event Requests" as UC_ReviewEventRequests
+    usecase "Administer Finance" as UC_AdministerFinance
+    usecase "Manage Bans" as UC_ManageBans
+    usecase "Manage Audience Access" as UC_ManageAudienceAccess
+  }
+
+  package "System Behaviors" as PkgSystem {
+    usecase "Generate Draft Event" as UC_GenerateDraftEvent
+    usecase "Validate E-Ticket" as UC_ValidateETicket
+  }
+}
+
+' ---------------------------------------------------------------------------
+' Primary actor associations
+' Associations are attached to the abstract/base role where the capability is
+' implemented; concrete roles inherit them through the generalization above.
+' ---------------------------------------------------------------------------
+
+PlatformUser -- UC_BrowseEvents
+PlatformUser -- UC_ViewEventDetails
+PlatformUser -- UC_AskAssistant
+PlatformUser -- UC_AccessPrivateEvent
+
+Visitor -- UC_RegisterAccount
+Visitor -- UC_LogIn
+Visitor -- UC_RecoverAccount
+Visitor -- UC_RestoreDeletedAccount
+
+RegisteredUser -- UC_ViewDashboard
+RegisteredUser -- UC_ManageAccount
+RegisteredUser -- UC_SubmitEventRequest
+RegisteredUser -- UC_ParticipateChat
+RegisteredUser -- UC_JoinMeeting
+
+Attendee -- UC_RegisterForEvent
+Attendee -- UC_CancelRegistration
+Attendee -- UC_ViewDownloadETicket
+Attendee -- UC_SubmitReview
+Attendee -- UC_SubmitEvaluation
+Attendee -- UC_JoinWaitlist
+
+Organizer -- UC_CreateEditEvent
+Organizer -- UC_ManageLifecycle
+Organizer -- UC_ManageRegistrationsInvitations
+Organizer -- UC_ManageScheduleSpeakers
+Organizer -- UC_PerformCheckInOut
+Organizer -- UC_ManageFinances
+Organizer -- UC_ManageFeedback
+Organizer -- UC_InitiateBanRevocation
+Organizer -- UC_ManageAudienceCampaigns
+
+Administrator -- UC_ManageUsersRolesPasswords
+Administrator -- UC_ManageReferenceDataFiles
+Administrator -- UC_ViewReportsAnalytics
+Administrator -- UC_ConfigureSettingsTemplates
+Administrator -- UC_MonitorSecurityAudit
+Administrator -- UC_BroadcastMessage
+Administrator -- UC_AssignOrganizers
+Administrator -- UC_ReviewEventRequests
+Administrator -- UC_AdministerFinance
+Administrator -- UC_ManageBans
+Administrator -- UC_ManageAudienceAccess
+
+' ---------------------------------------------------------------------------
+' Secondary actor associations
+' ---------------------------------------------------------------------------
+
+EmailService -- UC_RecoverAccount : sends delivery
+EmailService -- UC_RegisterForEvent : waitlist promotion
+EmailService -- UC_ManageAudienceCampaigns : campaign delivery
+EmailService -- UC_BroadcastMessage : message delivery
+JitsiMeet -- UC_JoinMeeting : meeting service
+AssistantActor -- UC_AskAssistant : AI service
+
+' ---------------------------------------------------------------------------
+' Genuine include/extend relationships only
+' ---------------------------------------------------------------------------
+
+UC_AccessPrivateEvent ..> UC_ViewEventDetails : <<extend>>
+UC_RestoreDeletedAccount ..> UC_RecoverAccount : <<extend>>
+UC_JoinWaitlist ..> UC_RegisterForEvent : <<extend>>
+
+UC_ReviewEventRequests ..> UC_GenerateDraftEvent : <<include>>
+UC_PerformCheckInOut ..> UC_ValidateETicket : <<include>>
+
+' ---------------------------------------------------------------------------
+' Scope and notation notes
+' ---------------------------------------------------------------------------
+
+note right of EmailService
+  Email provider is mock by default;
+  Resend/SendGrid require configuration.
+end note
+
+note bottom of System
+  Infrastructure, not an actor: Supabase Auth,
+  Postgres/RLS, Storage, Realtime, and Edge environment.
+  Event reminders are in-app, not email.
+end note
+
+legend right
+  Solid line = association
+  Dashed <<include>> = mandatory reuse
+  Dashed <<extend>> = conditional extension
+  Hollow triangle = actor role inheritance
+end legend
+
+@enduml

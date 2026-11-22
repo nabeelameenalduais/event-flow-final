@@ -1,0 +1,63 @@
+---
+title: EventFlow — Component / Architecture Diagram
+---
+%% Evidence: src/main.tsx (entry, provider nesting), src/App.tsx (Outlet + ChatWidget), src/routes/index.tsx
+%% (ProtectedRoute/PublicRoute, role-gated routes), src/lib/supabase.ts (createClient), src/services/* (22 modules),
+%% vite.config.ts (dev proxy /lmstudio -> 127.0.0.1:1234), src/components/chat/useChat.ts (LM_STUDIO_URL
+%% "/lmstudio/v1/chat/completions"), supabase/functions/chatbot/index.ts (OpenRouter edge function,
+%% production deployment option).
+%% Custom auth (users/password_hash + SECURITY DEFINER RPCs) — NOT Supabase Auth.
+
+flowchart TB
+    subgraph Client["Browser — React SPA"]
+        Entry["src/main.tsx<br/>createRoot + StrictMode"]
+        Theme["ThemeProvider"]
+        Auth["AuthProvider<br/>(AuthContext)"]
+        Router["RouterProvider<br/>(createBrowserRouter)"]
+        Public["PublicLayout<br/>Home, Events, EventDetail, Login, Register,<br/>Forgot/Reset Password, About, Contact"]
+        Protected["AppLayout (ProtectedRoute)<br/>Dashboard + Admin/Organizer/Attendee pages"]
+        Pages["Pages (src/pages/*)<br/>EventManagement, AttendanceManagement,<br/>RegistrationManagement, QrScanner, ..."]
+        Services["Service layer (src/services/*)<br/>authService, eventService, ticketService,<br/>attendanceService, invitationService, chatService,<br/>evaluationService, costService, notificationService, ..."]
+        ChatUI["ChatWidget (App-level)<br/>+ useChat hook"]
+        SupabaseClient["lib/supabase.ts<br/>createClient(URL, anonKey)"]
+
+        Entry --> Theme --> Auth --> Router
+        Router --> Public
+        Router --> Protected
+        Protected --> Pages
+        Pages --> Services
+        Auth --> Services
+        Services --> SupabaseClient
+    end
+
+    subgraph ChatLM["Dev-time AI assistant (LM Studio)"]
+        Proxy["vite dev proxy<br/>/lmstudio -> http://127.0.0.1:1234"]
+        LM["LM Studio server<br/>localhost:1234 (OpenAI-compatible)"]
+    end
+
+    subgraph SupabaseHost["Supabase project (vcmsdtighsmmwssyuese.supabase.co)"]
+        PG["Postgres (public schema)<br/>30 tables (users, events, tickets, ...)"]
+        RPC["Custom-auth RPCs (SECURITY DEFINER)<br/>authenticate_user, register_user,<br/>get_session_user, revoke_session, ..."]
+        RLS["Row Level Security policies<br/>(events, chat, evaluations, costs, ...)"]
+        EdgeFn["Edge Function: chatbot<br/>(OpenRouter meta-llama/llama-3.2-3b-instruct:free)"]
+
+        PG --> RPC
+        PG --> RLS
+    end
+
+    subgraph OpenRouter["OpenRouter (external LLM API)"]
+        ORAPI["/api/v1/chat/completions"]
+    end
+
+    ChatUI --> Proxy
+    Proxy --> LM
+
+    ChatUI -->|"direct REST fetch (useChat.executeTool)<br/>Supabase REST /rest/v1/*"| SupabaseClient
+
+    SupabaseClient -->|REST + anon key| PG
+    SupabaseClient -->|RPC calls| RPC
+
+    EdgeFn -.->|"production deployment option"| ORAPI
+
+    style EdgeFn fill:#f9f9f9,stroke:#999,stroke-dasharray:4 4
+    style ChatLM fill:#f3f4f6,stroke:#777

@@ -1,0 +1,72 @@
+---
+title: EventFlow - تسلسل مساعد الفعاليات الذكي (Chatbot) - تنفيذ فعلي
+---
+%% المصدر: src/components/chat/useChat.ts (الواجهة الفعلية)
+%% التنفيذ الفعلي: المتصفح يتصل مباشرة بنموذج LM Studio المحلي عبر /lmstudio
+%% على جهاز المطوّر، والأدوات (استعلام الفعاليات) تنفَّذ من المتصفح عبر
+%% Supabase REST API مباشرة (ليس عبر Edge Function أو OpenRouter في الواجهة).
+%% الفاعل: أي مستخدم يستخدم أداة الدردشة.
+
+sequenceDiagram
+    autonumber
+    participant U as المستخدم
+    participant UI as أداة الدردشة
+    participant UC as useChat (واجهة)
+    participant LM as LM Studio (نموذج محلي)
+    participant DB as Supabase (REST / واجهة)
+
+    rect rgb(240, 248, 255)
+    Note over U,DB: 1) رسالة بسيطة (بدون جلب بيانات)
+    U->>UI: "ما هي الفعاليات القادمة؟"
+    UI->>UC: sendMessage(text)
+    UC->>UC: إضافة رسالة المستخدم + حالة تحميل
+    UC->>LM: POST /lmstudio/v1/chat/completions (system + user)
+    LM-->>UC: رد نصي (لم يطلب أداة)
+    UC->>UI: appendMessage (المساعد)
+    UI-->>U: عرض الرد
+    end
+
+    rect rgb(245, 250, 250)
+    Note over U,DB: 2) طلب بيانات - أداة (Tool Calling) محلية
+    U->>UI: "ابحث عن فعالية باسم 'موسيقى'"
+    UI->>UC: sendMessage(...)
+    UC->>LM: POST /lmstudio (رسالة السؤال)
+    LM-->>UC: JSON أداة مثل {"name":"search_events","args":{"query":"موسيقى"}}
+    UC->>UC: parseToolCalls(text) - فحص الأدوات المعروفة
+    UC->>DB: GET /rest/v1/events (publiished + فلترة بالاسم) (executeTool)
+    DB-->>UC: قائمة الفعاليات
+    UC->>LM: إرسال نتيجة الأداة + "كوّن الرد"
+    LM-->>UC: الرد التخليصي
+    loop حتى 5 تكرارات (إن طلب النموذج أكثر من أداة)
+        Note over UC,LM: إعادة الاستعلام/النتائج ثم تكوين الرد النهائي
+    end
+    UC-->>U: الرد النهائي
+    end
+
+    rect rgb(255, 248, 245)
+    Note over U,DB: 3) الأدوات المتاحة (من المتصفح إلى Supabase REST)
+    Note over UC: search_events(query, category, limit)
+    Note over UC: get_upcoming_events(limit)
+    Note over UC: get_event_details(event_id) => فعالية + مكان + جلسات + تغذية راجعة
+    Note over UC: get_categories() | get_venues()
+    Note over UC: get_event_stats(event_id) => إحصاءات التسجيل
+    alt الفعالية غير موجودة
+        UC->>DB: طلب الحدث
+        DB-->>UC: فارغ
+        UC-->>LM: {error: "Event not found"} لتكوين رد مناسب
+    else أداة غير معروفة
+        UC-->>LM: {error: "Unknown tool"}
+    end
+    end
+
+    rect rgb(250, 250, 245)
+    Note over U,DB: 4) حالات خاصة (توفر النموذج والأخطاء)
+    alt نموذج LM Studio غير مشغّل / خارج الخدمة
+        LM-->>UC: خطأ (عدم الاستجابة/تعرّف)
+        UC->>UI: setError(...)
+        UI-->>U: إظهار رسالة خطأ (لا رد)
+    else إلغاء الطلب من المستخدم
+        U->>UC: abort()
+        UC-->>UI: إيقاف الطلب (AbortError، لا تحديث للحالة)
+    end
+    end

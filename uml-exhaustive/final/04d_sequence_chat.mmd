@@ -1,0 +1,70 @@
+---
+title: EventFlow — تسلسل الدردشة (قناة عامة / خاصة + Realtime)
+---
+%% Source: src/services/chatService.ts, supabase/schema.sql (realtime publication
+%%        على chat_channels و chat_messages), src/components/chat/*.
+
+sequenceDiagram
+    autonumber
+    participant M as المنظم (Organizer)
+    participant A as الحاضر (Attendee)
+    participant CS as chatService
+    participant DB as Supabase (RLS + Realtime)
+    participant CH as قناة Realtime
+
+    rect rgb(240, 248, 255)
+    Note over M,CH: 1) ضمان وجود القناة العامة عند فتح صفحة الفعالية
+    A->>CS: ensureGeneralChannel(eventId)
+    CS->>DB: SELECT chat_channels WHERE event_id AND channel_type='general'
+    alt غير موجودة
+        CS->>DB: INSERT chat_channels (general, organizer_id=NULL, attendee_id=NULL)
+        DB-->>CS: channel
+    else موجودة
+        DB-->>CS: channel
+    end
+    CS-->>A: channel
+    A->>CH: subscribeToChannel(channelId) [realtime]
+    end
+
+    rect rgb(245, 250, 250)
+    Note over M,CH: 2) قناة خاصة 1:1 (منظم <-> حاضر) بلا تكرار
+    M->>CS: ensurePrivateChannel(eventId, organizerId, attendeeProfileId)
+    CS->>DB: SELECT ... channel_type='private' AND trio فريد
+    alt موجودة
+        DB-->>CS: channel (يعاد استخدامها)
+    else غير موجودة
+        CS->>DB: INSERT chat_channels (private, organizer_id, attendee_id)
+        DB-->>CS: channel جديد
+    end
+    CS-->>M: channel
+    end
+
+    rect rgb(255, 248, 245)
+    Note over M,CH: 3) إرسال رسالة + بث Realtime للطرف الآخر
+    A->>CS: sendMessage(channelId, senderId, content)
+    CS->>DB: INSERT chat_messages (channel_id, sender_id, content)
+    DB-->>CS: message
+    DB-->>CH: broadcast INSERT (chat_messages)
+    CH-->>M: استقبال الرسالة لحظيًا (بدون إعادة تحميل)
+    CS-->>A: رسالة مؤكدة (ملزمة بجهة)
+    end
+
+    rect rgb(250, 248, 250)
+    Note over M,CH: 4) جلب السجل + أسماء المرسلين (join)
+    A->>CS: getMessages(channelId, limit)
+    CS->>DB: SELECT chat_messages JOIN users (sender)
+    DB-->>CS: ChatMessageWithSender[] (senderName, senderRole)
+    CS-->>A: قائمة الرسائل
+    end
+
+    rect rgb(250, 250, 245)
+    Note over M,CH: 5) سيناريوهات فشل/حافة
+    alt إرسال إلى قناة لا يملكها
+        DB-->>CS: RLS error
+        CS-->>A: خطأ "لا تملك صلاحية الوصول"
+    else انقطاع Realtime
+        Note over M,CH: يعيد العميل الاشتراك (reconnect) ويجلب السجل مجددًا
+    else قناة محذوفة (حذف الفعالية cascade)
+        CS-->>A: getChannelById => undefined
+    end
+    end

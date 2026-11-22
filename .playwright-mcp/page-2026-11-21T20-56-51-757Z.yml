@@ -1,0 +1,343 @@
+- generic [ref=f10e5]:
+  - complementary [ref=f10e6]:
+    - link "EventFlow" [ref=f10e8] [cursor=pointer]:
+      - /url: /dashboard
+    - navigation [ref=f10e10]:
+      - link "لوحة التحكم" [ref=f10e2174] [cursor=pointer]:
+        - /url: /dashboard
+      - link "تصفّح الفعاليات" [ref=f10e2175] [cursor=pointer]:
+        - /url: /events
+      - link "طلبات الفعاليات" [ref=f10e2176] [cursor=pointer]:
+        - /url: /dashboard/event-requests
+      - link "فعالياتي" [ref=f10e2177] [cursor=pointer]:
+        - /url: /dashboard/events
+      - link "الحظر" [ref=f10e2178] [cursor=pointer]:
+        - /url: /dashboard/bans
+      - link "الشؤون المالية" [ref=f10e2179] [cursor=pointer]:
+        - /url: /dashboard/finance
+      - link "الجمهور" [ref=f10e2180] [cursor=pointer]:
+        - /url: /dashboard/audience
+      - link "الحملات" [ref=f10e2181] [cursor=pointer]:
+        - /url: /dashboard/campaigns
+      - link "المستخدمون" [ref=f10e2182] [cursor=pointer]:
+        - /url: /dashboard/admin/users
+      - link "الفئات" [ref=f10e2183] [cursor=pointer]:
+        - /url: /dashboard/admin/categories
+      - link "الأماكن" [ref=f10e2184] [cursor=pointer]:
+        - /url: /dashboard/admin/venues
+      - link "الملفات" [ref=f10e2185] [cursor=pointer]:
+        - /url: /dashboard/admin/files
+      - link "التقارير" [ref=f10e2186] [cursor=pointer]:
+        - /url: /dashboard/admin/reports
+      - link "الرسائل الجماعية" [ref=f10e2187] [cursor=pointer]:
+        - /url: /dashboard/admin/broadcast
+      - link "إعادة تعيين كلمات المرور" [ref=f10e2188] [cursor=pointer]:
+        - /url: /dashboard/admin/password-resets
+      - link "الإعدادات" [ref=f10e2189] [cursor=pointer]:
+        - /url: /dashboard/admin/settings
+      - link "الأمان" [ref=f10e2190] [cursor=pointer]:
+        - /url: /dashboard/admin/security
+  - generic [ref=f10e91]:
+    - banner [ref=f10e92]:
+      - generic [ref=f10e94]:
+        - button "اللغة" [ref=f10e2191]:
+          - generic [ref=f10e99]: العربية
+        - button "تغيير المظهر" [ref=f10e2192]
+        - button "الإشعارات" [ref=f10e2193]
+        - button "AA Alice Admin مدير" [ref=f10e2194]:
+          - generic [ref=f10e108]: AA
+          - generic [ref=f10e110]:
+            - paragraph [ref=f10e111]: Alice Admin
+            - paragraph [ref=f10e112]: مدير
+    - main [ref=f10e115]:
+      - generic [ref=f10e2742]:
+        - generic [ref=f10e2743]:
+          - heading "فعالياتي" [level=1] [ref=f10e2744]
+          - button "إنشاء فعالية" [ref=f10e2745]
+        - paragraph [ref=f10e2746]: عرض جميع الفعاليات (عرض المدير)
+        - generic [ref=f10e2747]:
+          - textbox "ابحث عن فعاليات..." [ref=f10e2752]
+          - combobox [ref=f10e2753]:
+            - generic: كل الحالات
+          - combobox [ref=f10e2756]:
+            - generic: كل مستويات الظهور
+          - combobox [ref=f10e2759]:
+            - generic: الأحدث أولًا
+        - generic [ref=f10e2765]:
+          - generic [ref=f10e2766]:
+            - generic [ref=f10e2768]:
+              - generic [ref=f10e2769]:
+                - generic [ref=f10e2770]: QA-MYEVENTS-FIX-ACTION
+                - generic [ref=f10e2771]: تم نشره
+                - generic [ref=f10e2772]: عام
+              - generic [ref=f10e2773]:
+                - generic [ref=f10e2774]: ٢ ديسمبر ٢٠٢٦
+                - generic [ref=f10e2777]: Grand Convention Center
+                - generic [ref=f10e2781]: 100 مقعد
+            - generic [ref=f10e2787]:
+              - button "التسجيلات" [ref=f10e2788]
+              - button "الحضور" [ref=f10e2789]
+              - button "الجدول" [ref=f10e2790]
+              - button "التكاليف" [ref=f10e2791]
+              - button "التقييم" [ref=f10e2792]
+              - button "المحادثة" [ref=f10e2793]
+              - button "المنظّمون" [ref=f10e2794]
+              - button "عرض" [ref=f10e2795]
+              - button "تعديل" [ref=f10e2796]
+              - button "إرسال تذكير" [ref=f10e2797]
+              - button "أرشفة" [ref=f10e2798]
+              - button "إلغاء النشر" [ref=f10e2799]
+              - button "نسخ" [ref=f10e2800]
+              - button "حذف" [ref=f10e2801]
+          - generic [ref=f10e2802]:
+            - generic [ref=f10e2804]:
+              - generic [ref=f10e2805]:
+                - generic [ref=f10e2806]: Data Science Bootcamp
+                - generic [ref=f10e2807]: تم نشره
+                - generic [ref=f10e2808]: عام
+              - generic [ref=f10e2809]:
+                - generic [ref=f10e2810]: ١٥ أكتوبر ٢٠٢٦
+                - generic [ref=f10e2813]: Tech Hub Auditorium
+                - generic [ref=f10e2817]: 60 مقعد
+            - generic [ref=f10e2823]:
+              - button "التسجيلات" [ref=f10e2824]
+              - button "الحضور" [ref=f10e2825]
+              - button "الجدول" [ref=f10e2826]
+              - button "التكاليف" [ref=f10e2827]
+              - button "التقييم" [ref=f10e2828]
+              - button "المحادثة" [ref=f10e2829]
+              - button "المنظّمون" [ref=f10e2830]
+              - button "عرض" [ref=f10e2831]
+              - button "تعديل" [ref=f10e2832]
+              - button "إرسال تذكير" [ref=f10e2833]
+              - button "أرشفة" [ref=f10e2834]
+              - button "إلغاء النشر" [ref=f10e2835]
+              - button "نسخ" [ref=f10e2836]
+              - button "حذف" [ref=f10e2837]
+          - generic [ref=f10e2838]:
+            - generic [ref=f10e2840]:
+              - generic [ref=f10e2841]:
+                - generic [ref=f10e2842]: DevOps Days
+                - generic [ref=f10e2843]: تم نشره
+                - generic [ref=f10e2844]: عام
+              - generic [ref=f10e2845]:
+                - generic [ref=f10e2846]: ١ أكتوبر ٢٠٢٦
+                - generic [ref=f10e2849]: Grand Convention Center
+                - generic [ref=f10e2853]: 400 مقعد
+            - generic [ref=f10e2859]:
+              - button "التسجيلات" [ref=f10e2860]
+              - button "الحضور" [ref=f10e2861]
+              - button "الجدول" [ref=f10e2862]
+              - button "التكاليف" [ref=f10e2863]
+              - button "التقييم" [ref=f10e2864]
+              - button "المحادثة" [ref=f10e2865]
+              - button "المنظّمون" [ref=f10e2866]
+              - button "عرض" [ref=f10e2867]
+              - button "تعديل" [ref=f10e2868]
+              - button "إرسال تذكير" [ref=f10e2869]
+              - button "أرشفة" [ref=f10e2870]
+              - button "إلغاء النشر" [ref=f10e2871]
+              - button "نسخ" [ref=f10e2872]
+              - button "حذف" [ref=f10e2873]
+          - generic [ref=f10e2874]:
+            - generic [ref=f10e2876]:
+              - generic [ref=f10e2877]:
+                - generic [ref=f10e2878]: AI a
+                - generic [ref=f10e2879]: تم نشره
+                - generic [ref=f10e2880]: خاص
+              - generic [ref=f10e2881]:
+                - generic [ref=f10e2882]: ٢٤ سبتمبر ٢٠٢٦
+                - generic [ref=f10e2885]: Grand Convention Center
+                - generic [ref=f10e2889]: 100 مقعد
+            - generic [ref=f10e2895]:
+              - button "التسجيلات" [ref=f10e2896]
+              - button "الدعوات" [ref=f10e2897]
+              - button "الحضور" [ref=f10e2898]
+              - button "الجدول" [ref=f10e2899]
+              - button "التكاليف" [ref=f10e2900]
+              - button "التقييم" [ref=f10e2901]
+              - button "المحادثة" [ref=f10e2902]
+              - button "المنظّمون" [ref=f10e2903]
+              - button "عرض" [ref=f10e2904]
+              - button "تعديل" [ref=f10e2905]
+              - button "إرسال تذكير" [ref=f10e2906]
+              - button "أرشفة" [ref=f10e2907]
+              - button "إلغاء النشر" [ref=f10e2908]
+              - button "نسخ" [ref=f10e2909]
+              - button "حذف" [ref=f10e2910]
+          - generic [ref=f10e2911]:
+            - generic [ref=f10e2913]:
+              - generic [ref=f10e2914]:
+                - generic [ref=f10e2915]: Draft Planning Session
+                - generic [ref=f10e2916]: مسودة
+                - generic [ref=f10e2917]: خاص
+              - generic [ref=f10e2918]:
+                - generic [ref=f10e2919]: ١٠ سبتمبر ٢٠٢٦
+                - generic [ref=f10e2922]: Grand Convention Center
+                - generic [ref=f10e2926]: 20 مقعد
+            - generic [ref=f10e2932]:
+              - button "التسجيلات" [ref=f10e2933]
+              - button "الدعوات" [ref=f10e2934]
+              - button "الحضور" [ref=f10e2935]
+              - button "الجدول" [ref=f10e2936]
+              - button "التكاليف" [ref=f10e2937]
+              - button "التقييم" [ref=f10e2938]
+              - button "المحادثة" [ref=f10e2939]
+              - button "المنظّمون" [ref=f10e2940]
+              - button "عرض" [ref=f10e2941]
+              - button "تعديل" [ref=f10e2942]
+              - button "نشر" [ref=f10e2943]
+              - button "نسخ" [ref=f10e2944]
+              - button "حذف" [ref=f10e2945]
+          - generic [ref=f10e2946]:
+            - generic [ref=f10e2948]:
+              - generic [ref=f10e2949]:
+                - generic [ref=f10e2950]: Product Launch Meetup
+                - generic [ref=f10e2951]: تم نشره
+                - generic [ref=f10e2952]: عام
+              - generic [ref=f10e2953]:
+                - generic [ref=f10e2954]: ٥ سبتمبر ٢٠٢٦
+                - generic [ref=f10e2957]: Tech Hub Auditorium
+                - generic [ref=f10e2961]: 120 مقعد
+            - generic [ref=f10e2967]:
+              - button "التسجيلات" [ref=f10e2968]
+              - button "الحضور" [ref=f10e2969]
+              - button "الجدول" [ref=f10e2970]
+              - button "التكاليف" [ref=f10e2971]
+              - button "التقييم" [ref=f10e2972]
+              - button "المحادثة" [ref=f10e2973]
+              - button "المنظّمون" [ref=f10e2974]
+              - button "عرض" [ref=f10e2975]
+              - button "تعديل" [ref=f10e2976]
+              - button "إرسال تذكير" [ref=f10e2977]
+              - button "أرشفة" [ref=f10e2978]
+              - button "إلغاء النشر" [ref=f10e2979]
+              - button "نسخ" [ref=f10e2980]
+              - button "حذف" [ref=f10e2981]
+          - generic [ref=f10e2982]:
+            - generic [ref=f10e2984]:
+              - generic [ref=f10e2985]:
+                - generic [ref=f10e2986]: لمولد النبوي (Copy)
+                - generic [ref=f10e2987]: مسودة
+                - generic [ref=f10e2988]: خاص
+              - generic [ref=f10e2989]:
+                - generic [ref=f10e2990]: ٢٢ أغسطس ٢٠٢٦
+                - generic [ref=f10e2993]: Grand Convention Center
+                - generic [ref=f10e2997]: 100 مقعد
+            - generic [ref=f10e3003]:
+              - button "التسجيلات" [ref=f10e3004]
+              - button "الدعوات" [ref=f10e3005]
+              - button "الحضور" [ref=f10e3006]
+              - button "الجدول" [ref=f10e3007]
+              - button "التكاليف" [ref=f10e3008]
+              - button "التقييم" [ref=f10e3009]
+              - button "المحادثة" [ref=f10e3010]
+              - button "المنظّمون" [ref=f10e3011]
+              - button "عرض" [ref=f10e3012]
+              - button "تعديل" [ref=f10e3013]
+              - button "نشر" [ref=f10e3014]
+              - button "نسخ" [ref=f10e3015]
+              - button "حذف" [ref=f10e3016]
+          - generic [ref=f10e3017]:
+            - generic [ref=f10e3019]:
+              - generic [ref=f10e3020]:
+                - generic [ref=f10e3021]: لمولد النبوي
+                - generic [ref=f10e3022]: مسودة
+                - generic [ref=f10e3023]: عام
+              - generic [ref=f10e3024]:
+                - generic [ref=f10e3025]: ٢٢ أغسطس ٢٠٢٦
+                - generic [ref=f10e3028]: Grand Convention Center
+                - generic [ref=f10e3032]: 100 مقعد
+            - generic [ref=f10e3038]:
+              - button "التسجيلات" [ref=f10e3039]
+              - button "الحضور" [ref=f10e3040]
+              - button "الجدول" [ref=f10e3041]
+              - button "التكاليف" [ref=f10e3042]
+              - button "التقييم" [ref=f10e3043]
+              - button "المحادثة" [ref=f10e3044]
+              - button "المنظّمون" [ref=f10e3045]
+              - button "عرض" [ref=f10e3046]
+              - button "تعديل" [ref=f10e3047]
+              - button "نشر" [ref=f10e3048]
+              - button "نسخ" [ref=f10e3049]
+              - button "حذف" [ref=f10e3050]
+          - generic [ref=f10e3051]:
+            - generic [ref=f10e3053]:
+              - generic [ref=f10e3054]:
+                - generic [ref=f10e3055]: Hackathon 2026
+                - generic [ref=f10e3056]: تم نشره
+                - generic [ref=f10e3057]: عام
+              - generic [ref=f10e3058]:
+                - generic [ref=f10e3059]: ٢٢ أغسطس ٢٠٢٦
+                - generic [ref=f10e3062]: Grand Convention Center
+                - generic [ref=f10e3066]: 200 مقعد
+            - generic [ref=f10e3072]:
+              - button "التسجيلات" [ref=f10e3073]
+              - button "الحضور" [ref=f10e3074]
+              - button "الجدول" [ref=f10e3075]
+              - button "التكاليف" [ref=f10e3076]
+              - button "التقييم" [ref=f10e3077]
+              - button "المحادثة" [ref=f10e3078]
+              - button "المنظّمون" [ref=f10e3079]
+              - button "عرض" [ref=f10e3080]
+              - button "تعديل" [ref=f10e3081]
+              - button "إرسال تذكير" [ref=f10e3082]
+              - button "أرشفة" [ref=f10e3083]
+              - button "إلغاء النشر" [ref=f10e3084]
+              - button "نسخ" [ref=f10e3085]
+              - button "حذف" [ref=f10e3086]
+          - generic [ref=f10e3087]:
+            - generic [ref=f10e3089]:
+              - generic [ref=f10e3090]:
+                - generic [ref=f10e3091]: s
+                - generic [ref=f10e3092]: تم نشره
+                - generic [ref=f10e3093]: خاص
+              - generic [ref=f10e3094]:
+                - generic [ref=f10e3095]: ١٤ أغسطس ٢٠٢٦
+                - generic [ref=f10e3098]: Grand Convention Center
+                - generic [ref=f10e3102]: 100 مقعد
+            - generic [ref=f10e3108]:
+              - button "التسجيلات" [ref=f10e3109]
+              - button "الدعوات" [ref=f10e3110]
+              - button "الحضور" [ref=f10e3111]
+              - button "الجدول" [ref=f10e3112]
+              - button "التكاليف" [ref=f10e3113]
+              - button "التقييم" [ref=f10e3114]
+              - button "المحادثة" [ref=f10e3115]
+              - button "المنظّمون" [ref=f10e3116]
+              - button "عرض" [ref=f10e3117]
+              - button "تعديل" [ref=f10e3118]
+              - button "إرسال تذكير" [ref=f10e3119]
+              - button "أرشفة" [ref=f10e3120]
+              - button "إلغاء النشر" [ref=f10e3121]
+              - button "نسخ" [ref=f10e3122]
+              - button "حذف" [ref=f10e3123]
+        - generic [ref=f10e3124]:
+          - button "السابق" [disabled]
+          - generic [ref=f10e3125]: صفحة 1 من 3
+          - button "التالي" [ref=f10e3126]
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=f10e3127]:
+        - generic [ref=f10e3131]: تم حذف «QA-MYEVENTS-FIX-ACTION (نسخة)»
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "مساعد EventFlow" [level=3]
+          - paragraph: اسأل عن الفعاليات والأماكن والمزيد
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: مرحبًا!
+        - paragraph: يمكنني مساعدتك في اكتشاف الفعاليات والتعرّف على الأماكن والفئات وغيرها. ما الذي تود معرفته؟
+    - generic:
+      - button "الفعاليات القادمة"
+      - button "البحث حسب الفئة"
+      - button "الأماكن المتاحة"
+      - button "الحصول على التذاكر"
+    - generic:
+      - textbox "اسأل عن الفعاليات والأماكن والفئات..."
+      - button [disabled]
+  - button "المحادثة مع مساعد EventFlow" [ref=f10e2337]

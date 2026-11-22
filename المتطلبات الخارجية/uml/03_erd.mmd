@@ -1,0 +1,311 @@
+---
+title: EventFlow — Entity Relationship Diagram
+---
+%% Source of truth: supabase/schema.sql (authoritative database schema definition).
+%% All 30 public tables included; every relationship is an actual FK constraint.
+%% AppSettings (TS type) embeds emailTemplates array at application level; in the DB templates
+%% stored in the separate email_templates table (no FK). auth_attempts has no FKs.
+
+erDiagram
+    USERS ||--o| PROFILES : "profiles.user_id (UNIQUE, FK)"
+    ROLES ||--o{ PROFILES : "profiles.role_id (FK)"
+
+    CATEGORIES ||--o{ EVENTS : "events.category_id (FK)"
+    VENUES ||--o{ EVENTS : "events.venue_id (FK)"
+    PROFILES ||--o{ EVENTS : "events.organizer_id (FK)"
+    USERS ||--o{ EVENTS : "events.meeting_link_generated_by (FK)"
+
+    EVENTS ||--o{ EVENT_IMAGES : "event_images.event_id (FK)"
+    EVENTS ||--o{ SESSIONS : "sessions.event_id (FK)"
+    SESSIONS ||--o{ SPEAKERS : "speakers.session_id (FK)"
+    EVENTS ||--o{ REGISTRATIONS : "registrations.event_id (FK)"
+    PROFILES ||--o{ REGISTRATIONS : "registrations.attendee_id (FK)"
+    REGISTRATIONS ||--o| TICKETS : "tickets.registration_id (UNIQUE, FK)"
+    TICKETS ||--o{ ATTENDANCE : "attendance.ticket_id (FK)"
+    EVENTS ||--o{ FEEDBACK : "feedback.event_id (FK)"
+    PROFILES ||--o{ FEEDBACK : "feedback.attendee_id (FK)"
+    USERS ||--o{ NOTIFICATIONS : "notifications.user_id (FK)"
+    PROFILES ||--o{ FILES : "files.uploaded_by (FK)"
+    USERS ||--o{ AUDIT_LOGS : "audit_logs.user_id (FK)"
+    EVENTS ||--o{ INVITATION_LINKS : "invitation_links.event_id (FK)"
+    EVENTS ||--o{ EVENT_ORGANIZERS : "event_organizers.event_id (FK)"
+    USERS ||--o{ EVENT_ORGANIZERS : "event_organizers.user_id (FK)"
+    USERS ||--o{ EVENT_ORGANIZERS : "event_organizers.created_by (FK)"
+    EVENTS ||--o{ CHAT_CHANNELS : "chat_channels.event_id (FK)"
+    USERS ||--o{ CHAT_CHANNELS : "chat_channels.organizer_id (FK)"
+    PROFILES ||--o{ CHAT_CHANNELS : "chat_channels.attendee_id (FK)"
+    CHAT_CHANNELS ||--o{ CHAT_MESSAGES : "chat_messages.channel_id (FK)"
+    USERS ||--o{ CHAT_MESSAGES : "chat_messages.sender_id (FK)"
+    EVENTS ||--o{ EVALUATIONS : "evaluations.event_id (FK)"
+    USERS ||--o{ EVALUATIONS : "evaluations.created_by (FK)"
+    EVALUATIONS ||--o{ EVALUATION_QUESTIONS : "evaluation_questions.evaluation_id (FK)"
+    EVALUATIONS ||--o{ EVALUATION_SUBMISSIONS : "evaluation_submissions.evaluation_id (FK)"
+    PROFILES ||--o{ EVALUATION_SUBMISSIONS : "evaluation_submissions.attendee_id (FK)"
+    EVALUATION_SUBMISSIONS ||--o{ EVALUATION_ANSWERS : "evaluation_answers.submission_id (FK)"
+    EVALUATION_QUESTIONS ||--o{ EVALUATION_ANSWERS : "evaluation_answers.question_id (FK)"
+    EVENTS ||--o{ EVENT_COSTS : "event_costs.event_id (FK)"
+    USERS ||--o{ EVENT_COSTS : "event_costs.created_by (FK)"
+    USERS ||--o{ EVENT_COSTS : "event_costs.updated_by (FK)"
+    USERS ||--o{ DEVICE_SESSIONS : "device_sessions.user_id (FK)"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "password_reset_tokens.user_id (FK)"
+
+    USERS {
+        uuid id PK
+        text email
+        text password_hash
+        timestamptz created_at
+        timestamptz updated_at
+        boolean suspended
+    }
+    ROLES {
+        uuid id PK
+        text name UK
+        text description
+    }
+    PROFILES {
+        uuid id PK
+        uuid user_id FK,UK
+        text first_name
+        text last_name
+        text phone_number
+        text avatar_url
+        uuid role_id FK
+        boolean manages_all_events
+    }
+    CATEGORIES {
+        uuid id PK
+        text name
+        text description
+        text icon_url
+        text color_code
+        timestamptz deleted_at
+    }
+    VENUES {
+        uuid id PK
+        text name
+        text address
+        integer capacity
+        jsonb facilities
+        jsonb image_urls
+        timestamptz deleted_at
+    }
+    EVENTS {
+        uuid id PK
+        text title
+        text description
+        text cover_image_url
+        uuid organizer_id FK
+        uuid venue_id FK
+        integer capacity
+        timestamptz registration_deadline
+        timestamptz start_date
+        timestamptz end_date
+        text status
+        text visibility
+        text contact_email
+        uuid category_id FK
+        text event_type
+        text meeting_link
+        uuid meeting_link_generated_by FK
+        timestamptz meeting_link_created_at
+        timestamptz deleted_at
+    }
+    EVENT_IMAGES {
+        uuid id PK
+        uuid event_id FK
+        text image_url
+        text description
+    }
+    SESSIONS {
+        uuid id PK
+        uuid event_id FK
+        text title
+        text description
+        timestamptz start_time
+        timestamptz end_time
+        text room_name
+    }
+    SPEAKERS {
+        uuid id PK
+        uuid session_id FK
+        text name
+        text bio
+        text image_url
+    }
+    REGISTRATIONS {
+        uuid id PK
+        uuid event_id FK
+        uuid attendee_id FK
+        timestamptz registered_at
+        text status
+    }
+    TICKETS {
+        uuid id PK
+        uuid registration_id FK,UK
+        text unique_code UK
+        text qr_code_url
+        timestamptz issued_at
+        text status
+    }
+    ATTENDANCE {
+        uuid id PK
+        uuid ticket_id FK
+        timestamptz check_in_time
+        timestamptz check_out_time
+    }
+    FEEDBACK {
+        uuid id PK
+        uuid event_id FK
+        uuid attendee_id FK
+        integer rating
+        text comment
+        text response
+        timestamptz submitted_at
+        timestamptz responded_at
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        text type
+        text message
+        timestamptz read_at
+        timestamptz created_at
+        text link
+    }
+    FILES {
+        uuid id PK
+        text name
+        text url
+        text type
+        integer size
+        uuid uploaded_by FK
+        timestamptz created_at
+    }
+    AUDIT_LOGS {
+        uuid id PK
+        uuid user_id FK
+        text action
+        text entity_type
+        text entity_id
+        text details
+        text ip_address
+        timestamptz created_at
+    }
+    INVITATION_LINKS {
+        uuid id PK
+        uuid event_id FK
+        text email
+        text code UK
+        boolean used
+        timestamptz used_at
+        timestamptz created_at
+    }
+    EVENT_ORGANIZERS {
+        uuid id PK
+        uuid event_id FK
+        uuid user_id FK
+        boolean is_primary
+        timestamptz created_at
+        uuid created_by FK
+        "UNIQUE (event_id, user_id)"
+    }
+    CHAT_CHANNELS {
+        uuid id PK
+        uuid event_id FK
+        text channel_type
+        uuid organizer_id FK
+        uuid attendee_id FK
+        timestamptz created_at
+    }
+    CHAT_MESSAGES {
+        uuid id PK
+        uuid channel_id FK
+        uuid sender_id FK
+        text content
+        timestamptz created_at
+    }
+    EVALUATIONS {
+        uuid id PK
+        uuid event_id FK
+        text title
+        text rating_type
+        text privacy
+        uuid created_by FK
+        timestamptz created_at
+    }
+    EVALUATION_QUESTIONS {
+        uuid id PK
+        uuid evaluation_id FK
+        text question
+        text question_type
+        jsonb options
+        integer sort_order
+    }
+    EVALUATION_SUBMISSIONS {
+        uuid id PK
+        uuid evaluation_id FK
+        uuid attendee_id FK
+        integer rating
+        boolean is_public
+        timestamptz created_at
+        "UNIQUE (evaluation_id, attendee_id)"
+    }
+    EVALUATION_ANSWERS {
+        uuid id PK
+        uuid submission_id FK
+        uuid question_id FK
+        text answer
+        "UNIQUE (submission_id, question_id)"
+    }
+    EVENT_COSTS {
+        uuid id PK
+        uuid event_id FK
+        text cost_type
+        text item
+        text need_type
+        integer quantity
+        numeric unit_price
+        text notes
+        uuid created_by FK
+        uuid updated_by FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    DEVICE_SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        text device_name
+        text ip_address
+        text token
+        timestamptz last_active_at
+        timestamptz created_at
+    }
+    PASSWORD_RESET_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        text token
+        timestamptz created_at
+        timestamptz expires_at
+        timestamptz used_at
+    }
+    APP_SETTINGS {
+        uuid id PK
+        text app_name
+        text timezone
+        text date_format
+        text primary_color
+        text logo_url
+        text favicon_url
+        timestamptz updated_at
+    }
+    EMAIL_TEMPLATES {
+        uuid id PK
+        text type
+        text subject
+        text body
+    }
+    AUTH_ATTEMPTS {
+        uuid id PK
+        text email
+        timestamptz attempted_at
+    }

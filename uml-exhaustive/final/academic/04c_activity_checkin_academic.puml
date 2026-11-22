@@ -1,0 +1,26 @@
+@startuml
+title Activity - Check-in (Academic)
+skinparam shadowing false
+start
+:Scan QR / enter ticket code;
+:findTicketByCode(code);
+if (Ticket found?) then (no)
+  :Error "Ticket not found";
+  stop
+else (yes)
+endif
+if (ticket.status = "used"?) then (yes)
+  :Error "Ticket already checked in";
+  stop
+else (no)
+endif
+if (registration.status = "confirmed"?) then (no)
+  :Error "Registration is not confirmed -\ncannot check in";
+  stop
+else (yes)
+endif
+:Update ticket -> status "used";
+:Insert attendance (check_in_time);
+:Show success - attendee marked present;
+stop
+@enduml

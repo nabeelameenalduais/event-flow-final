@@ -1,0 +1,39 @@
+@startuml
+header Diagram 2 - Check-in flow (code / QR)
+title Ticket Check-in
+skinparam shadowing false
+
+actor "Gate staff / Attendee" as A
+boundary "Web UI" as U
+control "attendanceService" as S
+database "Database" as D
+
+A -> U : scan QR or enter ticket code
+U -> S : findTicketByCode(code)
+activate S
+  S -> D : select ticket (by code) + registration(status)
+  D --> S : ticket row (or null)
+  alt ticket not found
+    S --> U : error "Ticket not found"
+  else ticket found
+    alt ticket.status = "used"
+      S --> U : error "Ticket already checked in"
+    else ticket is valid
+      alt registration.status != "confirmed"
+        S --> U : error "Registration is not confirmed - cannot check in"
+      else registration confirmed
+        S -> D : update ticket -> status = "used"
+        D --> S : ok
+        S -> D : insert attendance (ticket_id, check_in_time)
+        D --> S : attendance row
+        S --> U : success - attendee marked present
+      end
+    end
+  end
+deactivate S
+
+note bottom
+  No notification or audit is created on check-in.
+  checkOut(attendanceId) only stamps check_out_time.
+end note
+@enduml

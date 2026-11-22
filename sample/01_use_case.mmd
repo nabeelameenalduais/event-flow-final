@@ -1,0 +1,137 @@
+```mermaid
+flowchart TB
+
+%% =========================================================
+%% EventFlow — Use Case Diagram (portrait orientation)
+%% =========================================================
+%% Layout notes: actors are placed inside their own use-case
+%% subgraph so dagre stacks the four groups vertically (TB).
+%% The `direction` keyword inside nested subgraphs is ignored /
+%% overridden by Mermaid and forces a horizontal arrangement,
+%% so it is intentionally omitted.
+
+subgraph System["EventFlow System"]
+    %% -------------------------
+    %% Visitor Use Cases
+    %% -------------------------
+    subgraph VisitorCases["Visitor"]
+        Visitor(["Visitor<br/>(unauthenticated)"])
+        UC1["Browse published events"]
+        UC2["View event detail"]
+        UC3["Register account"]
+        UC4["Log in"]
+        UC5["Reset password"]
+    end
+
+    %% -------------------------
+    %% Attendee Use Cases
+    %% -------------------------
+    subgraph AttendeeCases["Attendee"]
+        Attendee(["Attendee"])
+        UC6["Register for an event<br/>(auto ticket / waitlist)"]
+        UC7["View / download ticket<br/>(QR code)"]
+        UC8["Submit event evaluation"]
+        UC9["Submit feedback"]
+        UC10["Participate in event chat"]
+        UC11["Cancel own registration"]
+    end
+
+    %% -------------------------
+    %% Organizer Use Cases
+    %% -------------------------
+    subgraph OrganizerCases["Organizer"]
+        Organizer(["Organizer"])
+        UC12["Create / edit / delete event"]
+        UC13["Publish / archive / set draft<br/>(event lifecycle)"]
+        UC14["Manage event schedule<br/>(sessions & speakers)"]
+        UC15["Manage registrations"]
+        UC16["QR check-in / check-out attendees"]
+        UC17["Generate & share invitation links"]
+        UC18["Manage event costs"]
+        UC19["Build & manage evaluations"]
+        UC20["Respond to feedback"]
+    end
+
+    %% -------------------------
+    %% Admin Use Cases
+    %% -------------------------
+    subgraph AdminCases["Admin"]
+        Admin(["Admin"])
+        UC21["Manage users (roles)"]
+        UC22["Manage categories"]
+        UC23["Manage venues"]
+        UC24["Manage files"]
+        UC25["Manage event organizers"]
+        UC26["View reports / analytics"]
+        UC27["Configure system settings"]
+        UC28["Manage security center<br/>(sessions & audit log)"]
+    end
+end
+
+%% =========================================================
+%% Visitor Relationships
+%% =========================================================
+
+Visitor --> UC1
+Visitor --> UC2
+Visitor --> UC3
+Visitor --> UC4
+Visitor --> UC5
+
+%% =========================================================
+%% Attendee Relationships
+%% =========================================================
+
+Attendee --> UC6
+Attendee --> UC7
+Attendee --> UC8
+Attendee --> UC9
+Attendee --> UC10
+Attendee --> UC11
+Attendee --> UC4
+
+%% =========================================================
+%% Organizer Relationships
+%% =========================================================
+
+Organizer --> UC12
+Organizer --> UC13
+Organizer --> UC14
+Organizer --> UC15
+Organizer --> UC16
+Organizer --> UC17
+Organizer --> UC18
+Organizer --> UC19
+Organizer --> UC20
+
+%% =========================================================
+%% Admin Relationships
+%% =========================================================
+
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+Admin --> UC19
+Admin --> UC20
+
+Admin --> UC21
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC25
+Admin --> UC26
+Admin --> UC27
+Admin --> UC28
+Admin --> UC4
+
+%% =========================================================
+%% Generalization
+%% Admin inherits Organizer capabilities
+%% =========================================================
+
+Admin -.->|generalization| Organizer
+```

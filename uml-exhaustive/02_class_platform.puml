@@ -1,0 +1,81 @@
+' ============================================================================
+' PART 3/3 - PRESENTATION INFRA + PLATFORM (included by 02_class.puml)
+' Sources: src/contexts, src/routes, src/lib, src/components/chat/useChat.ts,
+'          supabase/functions/chatbot (design alternative - NOT used by current UI)
+' ACTUAL chatbot path: useChat.ts -> LM Studio (local) + Supabase REST from the browser.
+' ============================================================================
+package "Presentation Infrastructure (src/contexts, src/routes)" as P_PRESENT {
+  class AuthContext <<context>> {
+    + user : User | null
+    + profile : Profile | null
+    + isLoading : boolean
+    + isAuthenticated : boolean
+    + login(email, password) : Promise<boolean>
+    + register(data) : Promise<boolean>
+    + logout() : Promise<void>
+    + refreshProfile() : Promise<void>
+    + restoreSession() : Promise<void>
+  }
+  class ThemeContext <<context>> {
+    + theme : "light" | "dark"
+    + toggleTheme() : void
+  }
+  class ProtectedRoute <<guard>> {
+    + allowedRoles : RoleName[]
+    - isAuthorized(user, allowedRoles) : boolean
+  }
+  class PublicRoute <<guard>> {
+    - redirectAuthenticated() : void
+  }
+  class useChat <<hook>> {
+    - LM_STUDIO_URL : string = "/lmstudio/v1/chat/completions"
+    + messages : ChatMessage[]
+    + isLoading : boolean
+    + error : string | null
+    + sendMessage(content) : Promise<void>
+    + clearMessages() : void
+    - chatWithTools(userMessage) : Promise<string>
+    - callLLM(messages) : Promise<string>
+    - parseToolCalls(text) : ParsedToolCall[]
+    - executeTool(name, args) : Promise<unknown>
+  }
+}
+
+package "Infrastructure (src/lib)" as P_LIB {
+  class supabaseClient <<singleton>> {
+    + client : SupabaseClient
+    - supabaseUrl : string
+    - anonKey : string
+  }
+  class RateLimiter <<utility>> {
+    + checkRateLimit(key, max?, windowMs?) : { allowed, retryAfter }
+    + withRateLimit(key, fn) : Promise<T>
+  }
+  class SupabaseErrorMapper <<utility>> {
+    + isMissingFunction(error) : boolean
+    + isAuthenticationRequired(error) : boolean
+    + extractMessage(error) : string
+  }
+}
+
+package "Edge Functions (supabase/functions/chatbot) - design alternative, NOT used by current UI" as P_EDGE {
+  class ChatbotEdgeFunction <<edge_function>> {
+    + handleRequest(req) : Promise<Response>
+    - callOpenRouter(messages, tools) : Promise<ChatCompletion>
+    - executeTool(name, args) : Promise<string>
+    - tool_search_events(query) : Promise<string>
+    - tool_get_event_details(eventId) : Promise<string>
+    - tool_get_categories() : Promise<string>
+    - tool_get_venues() : Promise<string>
+    - tool_get_upcoming_events() : Promise<string>
+    - tool_get_event_stats(eventId) : Promise<string>
+  }
+  enum ChatTool {
+    search_events
+    get_event_details
+    get_categories
+    get_venues
+    get_upcoming_events
+    get_event_stats
+  }
+}

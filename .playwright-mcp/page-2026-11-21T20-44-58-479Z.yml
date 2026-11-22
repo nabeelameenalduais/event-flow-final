@@ -1,0 +1,139 @@
+- generic [ref=f8e5]:
+  - complementary [ref=f8e6]:
+    - link "EventFlow" [ref=f8e8] [cursor=pointer]:
+      - /url: /dashboard
+    - navigation [ref=f8e10]:
+      - link "Dashboard" [ref=f8e11] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Browse Events" [ref=f8e17] [cursor=pointer]:
+        - /url: /events
+      - link "Event Requests" [ref=f8e20] [cursor=pointer]:
+        - /url: /dashboard/event-requests
+      - link "My Events" [ref=f8e23] [cursor=pointer]:
+        - /url: /dashboard/events
+      - link "Bans" [ref=f8e27] [cursor=pointer]:
+        - /url: /dashboard/bans
+      - link "Finance" [ref=f8e31] [cursor=pointer]:
+        - /url: /dashboard/finance
+      - link "Audience" [ref=f8e35] [cursor=pointer]:
+        - /url: /dashboard/audience
+      - link "Campaigns" [ref=f8e41] [cursor=pointer]:
+        - /url: /dashboard/campaigns
+      - link "Users" [ref=f8e45] [cursor=pointer]:
+        - /url: /dashboard/admin/users
+      - link "Categories" [ref=f8e58] [cursor=pointer]:
+        - /url: /dashboard/admin/categories
+      - link "Venues" [ref=f8e63] [cursor=pointer]:
+        - /url: /dashboard/admin/venues
+      - link "Files" [ref=f8e68] [cursor=pointer]:
+        - /url: /dashboard/admin/files
+      - link "Reports" [ref=f8e73] [cursor=pointer]:
+        - /url: /dashboard/admin/reports
+      - link "Broadcast" [ref=f8e76] [cursor=pointer]:
+        - /url: /dashboard/admin/broadcast
+      - link "Password Resets" [ref=f8e80] [cursor=pointer]:
+        - /url: /dashboard/admin/password-resets
+      - link "Settings" [ref=f8e84] [cursor=pointer]:
+        - /url: /dashboard/admin/settings
+      - link "Security" [ref=f8e88] [cursor=pointer]:
+        - /url: /dashboard/admin/security
+  - generic [ref=f8e91]:
+    - banner [ref=f8e92]:
+      - generic [ref=f8e94]:
+        - button "Language" [ref=f8e95]:
+          - generic [ref=f8e99]: English
+        - button "Toggle theme" [ref=f8e100]
+        - button "Notifications" [ref=f8e103]
+        - button "AA Alice Admin admin" [ref=f8e107]:
+          - generic [ref=f8e108]: AA
+          - generic [ref=f8e110]:
+            - paragraph [ref=f8e111]: Alice Admin
+            - paragraph [ref=f8e112]: admin
+    - main [ref=f8e115]:
+      - generic [ref=f8e122]:
+        - generic [ref=f8e123]:
+          - heading "My Events" [level=1] [ref=f8e124]
+          - button "Create Event" [ref=f8e125]
+        - paragraph [ref=f8e126]: Showing all events (admin view)
+        - generic [ref=f8e127]:
+          - textbox "Search events..." [active] [ref=f8e132]: AI
+          - combobox [ref=f8e133]:
+            - generic: All statuses
+          - combobox [ref=f8e136]:
+            - generic: All visibilities
+          - combobox [ref=f8e139]:
+            - generic: Newest first
+        - generic [ref=f8e145]:
+          - generic [ref=f8e218]:
+            - generic [ref=f8e220]:
+              - generic [ref=f8e221]:
+                - generic [ref=f8e222]: AI a
+                - generic [ref=f8e223]: published
+                - generic [ref=f8e224]: Private
+              - generic [ref=f8e225]:
+                - generic [ref=f8e226]: 9/24/2026
+                - generic [ref=f8e229]: Grand Convention Center
+                - generic [ref=f8e233]: 100 spots
+            - generic [ref=f8e239]:
+              - button "Registrations" [ref=f8e240]
+              - button "Invitations" [ref=f8e241]
+              - button "Attendance" [ref=f8e242]
+              - button "Schedule" [ref=f8e243]
+              - button "Costs" [ref=f8e244]
+              - button "Evaluation" [ref=f8e245]
+              - button "Chat" [ref=f8e246]
+              - button "Organizers" [ref=f8e247]
+              - button "View" [ref=f8e248]
+              - button "Edit" [ref=f8e249]
+              - button "Send Reminder" [ref=f8e250]
+              - button "Archive" [ref=f8e251]
+              - button "Unpublish" [ref=f8e252]
+              - button "Duplicate" [ref=f8e253]
+              - button "Delete" [ref=f8e254]
+          - generic [ref=f8e507]:
+            - generic [ref=f8e509]:
+              - generic [ref=f8e510]:
+                - generic [ref=f8e511]: AI Workshop
+                - generic [ref=f8e512]: published
+                - generic [ref=f8e513]: Public
+              - generic [ref=f8e514]:
+                - generic [ref=f8e515]: 7/1/2026
+                - generic [ref=f8e518]: Grand Convention Center
+                - generic [ref=f8e522]: 80 spots
+            - generic [ref=f8e528]:
+              - button "Registrations" [ref=f8e529]
+              - button "Attendance" [ref=f8e530]
+              - button "Schedule" [ref=f8e531]
+              - button "Costs" [ref=f8e532]
+              - button "Evaluation" [ref=f8e533]
+              - button "Chat" [ref=f8e534]
+              - button "Organizers" [ref=f8e535]
+              - button "View" [ref=f8e536]
+              - button "Edit" [ref=f8e537]
+              - button "Send Reminder" [ref=f8e538]
+              - button "Archive" [ref=f8e539]
+              - button "Unpublish" [ref=f8e540]
+              - button "Duplicate" [ref=f8e541]
+              - button "Delete" [ref=f8e542]
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "EventFlow Assistant" [level=3]
+          - paragraph: Ask about events, venues & more
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: Hi there!
+        - paragraph: I can help you discover events, check venues, explore categories, and more. What would you like to know?
+    - generic:
+      - button "Upcoming events"
+      - button "Find by category"
+      - button "Available venues"
+      - button "Get tickets"
+    - generic:
+      - textbox "Ask about events, venues, categories..."
+      - button [disabled]
+  - button "Chat with EventFlow Assistant" [ref=f8e119]

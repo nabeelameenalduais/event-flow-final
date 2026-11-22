@@ -1,0 +1,47 @@
+---
+title: EventFlow — مخطط النشر (Deployment)
+---
+%% المصدر: package.json (build عبر Vite)، supabase/ (SQL + Edge Function)،
+%%        استضافة ثابتة للملفات المبنيّة، وسحابة Supabase كـ PaaS.
+%% العُقد Nodes وأدوات Artifacts والنقل بينها (HTTPS/WSS).
+
+flowchart TB
+    subgraph UserDevice["العقدة: جهاز المستخدم (المتصفح)"]
+        direction TB
+        ART_SPA["الأداة: EventFlow SPA (حزمة Vite build)<br/>React 19 + TS + Tailwind"]
+        ART_CAM["الأداة: وصول الكاميرا (QR)<br/>getUserMedia / html5-qrcode"]
+    end
+
+    subgraph Hosting["العقدة: استضافة الملفات الثابتة (CDN/Vercel/Netlify)"]
+        ART_STATIC["الأداة: ملفات dist المبنية<br/>(index.html + assets)"]
+    end
+
+    subgraph SupabaseCloud["العقدة: Supabase Cloud (PaaS)"]
+        direction TB
+        subgraph PGNode["عقدة فرعية: PostgreSQL 15"]
+            ART_DB["الأداة: قاعدة البيانات<br/>schema.sql (30 جدول) + RLS + RPCs + Triggers"]
+        end
+        subgraph EdgeNode["عقدة فرعية: Edge Runtime (Deno) — غير مستخدم في الواجهة الحالية"]
+            ART_EF["الأداة: chatbot/index.ts<br/>التصدير كـ supabase/functions"]
+        end
+        ART_RT["الخدمة: Realtime (CDC)<br/>chat_channels + chat_messages"]
+        ART_ST["الخدمة: Storage (ساحات الصور/الملفات)"]
+    end
+
+    subgraph ExternalCloud["عُقد خارجية"]
+        OR_NODE["العقدة: OpenRouter<br/>LLM API (llama-3.2-3b-instruct)<br/>(غير مستخدم في الواجهة الحالية)"]
+        LM_NODE["العقدة: LM Studio (محلي)<br/>المسار الفعلي للروبوت في الواجهة"]
+        EMAIL_NODE["العقدة: Email Gateway (محاكى)<br/>توصيل روابط إعادة التعيين"]
+    end
+
+    UserDevice -->|"HTTPS: تحميل SPA"| Hosting
+    UserDevice -->|"HTTPS: REST/RPC/Storage<br/>(anon key + RLS)"| SupabaseCloud
+    UserDevice -->|"WSS: اشتراك Realtime"| SupabaseCloud
+    UserDevice -->|"HTTP محلي: POST /lmstudio/v1/chat/completions (المسار الفعلي للروبوت)"| LM_NODE
+    UserDevice -.غير مستخدم في الواجهة الحالية.-> SupabaseCloud
+    SupabaseCloud -->|"قوالب البريد (مؤجل/محاكى)"| EMAIL_NODE
+    UserDevice -->|"داخلي: وصول الكاميرا"| ART_CAM
+
+    PGNode --> ART_RT
+    EdgeNode --> PGNode
+    ART_EF --> OR_NODE

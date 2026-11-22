@@ -1,0 +1,182 @@
+@startuml sequence_registration
+' EventFlow — source-verified UML 2.x sequence diagram for "Register for Event".
+' Detailed guard logic is encapsulated in UML Interaction Use (ref) frames so the
+' diagram remains readable in a graduation report while staying traceable to source.
+
+title EventFlow — Sequence Diagram: Register for Event\nSource-verified UML 2.x
+
+autonumber
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam maxMessageSize 200
+
+skinparam sequenceArrowColor #4B5563
+skinparam sequenceActorBorderColor #2F5597
+skinparam sequenceActorBackgroundColor #EAF1FB
+skinparam sequenceActorFontColor #1F2937
+skinparam sequenceActorFontName Arial
+skinparam sequenceActorFontSize 11
+
+skinparam sequenceParticipantBorderColor #2F5597
+skinparam sequenceParticipantBackgroundColor #F8FBFF
+skinparam sequenceParticipantFontColor #1F2937
+skinparam sequenceParticipantFontName Arial
+skinparam sequenceParticipantFontSize 11
+
+skinparam sequenceDatabaseBorderColor #2F5597
+skinparam sequenceDatabaseBackgroundColor #F4F7FA
+skinparam sequenceDatabaseFontColor #1F2937
+skinparam sequenceDatabaseFontName Arial
+skinparam sequenceDatabaseFontSize 11
+
+skinparam sequenceGroupBorderColor #8EA9C1
+skinparam sequenceGroupBackgroundColor #F9FBFD
+skinparam sequenceGroupFontColor #243B53
+skinparam sequenceGroupFontName Arial
+skinparam sequenceGroupFontSize 11
+
+skinparam sequenceNoteBorderColor #B8C4CE
+skinparam sequenceNoteBackgroundColor #FFFDF5
+skinparam sequenceNoteFontColor #4B5563
+skinparam sequenceNoteFontName Arial
+skinparam sequenceNoteFontSize 10
+
+actor "Attendee" as Attendee
+participant "EventDetail page\n(React UI)" as UI
+participant "eventService" as ES
+participant "invitationService" as IS
+participant "banService /\nbans_check_registration" as Ban
+participant "ticketService" as TS
+participant "notificationService" as NS
+database "Supabase / Postgres" as DB
+actor "Organizer\n(passive recipient)" as Organizer
+
+note over Attendee,DB
+  Scope: implemented attendee-facing "Register for Event" flow.
+  UI preconditions: authenticated attendee role, event not ended,
+  and no existing non-cancelled registration.
+  getRegistrations() loads existing registration state for every event.
+end note
+
+group 1 — Page load and private invitation validation
+
+  Attendee -> UI: Open /events/{eventId}?code={code}
+  UI -> ES: getEventById(eventId)
+  ES -> DB: SELECT event by id
+  DB --> ES: event row
+  ES --> UI: event
+
+  opt visibility = "private"
+    ref over UI, IS, DB: Validate ?code via invitationService.getLinkByCode(code)
+    note right of UI
+      Page errors: "This event is private and requires a valid invitation link to access.",
+      "Invalid invitation link", "This invitation link has already been used",
+      or "Wrong account" when invitedEmail differs from the logged-in email.
+    end note
+    UI -> UI: validCode = code; invitedEmail = link.email
+  end
+
+end
+
+group 2 — registerForEvent validation
+
+  Attendee -> UI: Click "Register Now" or "Join Waiting List"
+  UI -> ES: registerForEvent(eventId, attendeeId, validCode?, attendanceMode?)
+  activate ES
+
+  ref over ES, DB: SELECT event fields + profile/user email; apply event guards
+  note right of ES
+    Event guards: "Event not found", "This event is not open for registration",
+    "The registration deadline has passed", "This event has already ended",
+    "Profile not found".
+  end note
+
+  opt visibility = "private"
+    ref over ES, IS, DB: Validate invitation code in service order
+    note right of ES
+      Service order: missing code → "An invitation code is required for this private event";
+      unknown → "Invalid invitation link"; used → "This invitation link has already been used";
+      wrong event → "This invitation link does not belong to this event";
+      email mismatch → "This invitation was sent to a different email address".
+    end note
+  end
+
+  ref over ES, Ban, DB: checkBanForRegistration via bans_check_registration RPC
+  ES -> DB: SELECT existing non-cancelled registration
+  DB --> ES: existing row or none
+
+  alt validation, ban, or duplicate check fails
+    ES --> UI: throw source-defined error
+    UI --> Attendee: toast.error(localized message)
+  else validation passes
+    group 3 — Commit registration
+
+      ES -> DB: COUNT confirmed registrations (filtered by mode for hybrid)
+      DB --> ES: confirmedCount
+
+      alt isFull = capacity > 0 && confirmedCount >= capacity
+        ES -> DB: INSERT registration status = "waitlisted"
+        DB --> ES: registration row
+        ES -> ES: getWaitlistPosition()
+        ES -> NS: sendNotification(userId, "waitlist", position message)
+        NS -> DB: INSERT notifications
+        ES -> ES: result = { registration, waitlisted: true, position }
+
+      else seat available
+        ES -> DB: INSERT registration status = "confirmed"
+        DB --> ES: registration row
+        ES -> ES: generateTicketForRegistration(registration, eventTitle, eventType)
+        ES -> TS: generateTicket(registration.id, eventTitle, mode, registration.eventId)
+        activate TS
+        TS -> TS: code = EF- + 12 chars; QR payload EF1:{v,code,eventId,registrationId,mode}
+        TS -> DB: INSERT tickets (code, QR URL, QR payload, attendance_mode)
+        DB --> TS: ticket row
+        TS --> ES: ticket
+        deactivate TS
+        ES -> NS: sendNotification(userId, "registration_confirmation", confirmation message)
+        NS -> DB: INSERT notifications
+        ES -> ES: result = { registration, waitlisted: false }
+      end
+
+      ES -> ES: syncRegistrantToAudience(attendeeId) — best-effort, errors ignored
+
+      opt private event registration succeeded
+        ES -> DB: SELECT invitation_links by code (fresh query for id)
+        DB --> ES: link row
+        ES -> IS: markLinkAsUsed(link.id)
+        IS -> DB: UPDATE invitation_links SET used = true, used_at = ISO timestamp
+        ES -> DB: SELECT organizer profile by events.organizer_id
+        DB --> ES: organizer profile
+        note right of ES
+          Organizer lookup is two SELECTs (events → profiles);
+          only events.organizer_id receives invitation_used.
+        end note
+        ES -> NS: sendNotification(organizerUserId, "invitation_used", invited-guest message)
+        NS -> DB: INSERT notifications
+        NS --> Organizer: In-app notification
+      end
+
+      opt isFull
+        ES -> ES: getWaitlistInfo()
+      end
+
+      ES --> UI: registration result
+      UI --> Attendee: success toast or "you are number N on the waiting list"
+      UI -> UI: fetchData() to refresh registration and waitlist state
+    end
+
+  end
+
+  deactivate ES
+
+end
+
+note over NS,DB
+  Registration and waitlist placement use in-app notifications only — no email.
+  A later waitlist promotion after another attendee's cancellation creates a ticket,
+  two in-app "waitlist_promotion" notifications (application + DB trigger),
+  and an email attempt that is mock by default.
+end note
+
+@enduml

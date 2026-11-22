@@ -1,0 +1,136 @@
+---
+title: EventFlow - تسلسل التسجيل في فعالية (تسجيل / قائمة انتظار / إلغاء)
+---
+%% المصدر: src/services/eventService.ts (registerForEvent, cancelRegistration)
+%%          src/services/invitationService.ts, src/services/ticketService.ts,
+%%          src/services/notificationService.ts
+%% الفاعل: الحضور (Attendee) - مستخدم عادي مسجّل دخول.
+%% الحالات الخاصة موزّعة على المستخدم الصحيح وواقعه:
+%%   - المستخدم العادي يصل فقط إلى الفعاليات المنشورة والعامة، فلا تظهر له
+%%     حالة "غير منشورة". دعوة/رمز خاص فقط بالفعاليات الخاصة.
+%%   - النظام لا يكتب حالة pending إطلاقاً (فقط confirmed / waitlisted / cancelled).
+
+sequenceDiagram
+    autonumber
+    participant U as الحضور (Attendee)
+    participant UI as صفحة الحدث (EventDetail)
+    participant ES as eventService
+    participant TS as ticketService
+    participant NS as notificationService
+    participant DB as Supabase (RLS)
+
+    rect rgb(240, 248, 255)
+    Note over U,DB: 1) التسجيل في فعالية عامة (Happy Path) - لا يوجد رمز
+    U->>UI: يفتح صفحة الحدث
+    UI->>ES: registerForEvent(eventId, attendeeId)
+    ES->>DB: SELECT الحدث (status, deadline, end_date, capacity, visibility)
+    DB-->>ES: بيانات الحدث
+    alt تجاوز موعد التسجيل
+        ES-->>UI: خطأ "The registration deadline has passed"
+    else انتهت الفعالية
+        ES-->>UI: خطأ "This event has already ended"
+    else الحضور مسجّل مسبقاً
+        ES-->>UI: خطأ "Already registered for this event"
+    else مقاعد متاحة
+        ES->>DB: COUNT التسجيلات status='confirmed'
+        DB-->>ES: العدد الحالي المسجّل
+        alt السعة لم تمتلئ
+            ES->>DB: INSERT التسجيل status='confirmed'
+            DB-->>ES: التسجيل الجديد
+            ES->>TS: generateTicket(registrationId, event.title)
+            TS->>DB: INSERT التذكرة (unique_code + QR)
+            DB-->>TS: التذكرة
+            TS-->>ES: التذكرة
+            ES->>NS: إشعار "registration_confirmation"
+            DB-->>NS: تم إدخال الإشعار
+            ES-->>UI: { confirmed, waitlisted: false }
+            UI-->>U: "تم التسجيل بنجاح - تذكرتك جاهزة"
+        else السعة ممتلئة
+            ES->>DB: INSERT التسجيل status='waitlisted'
+            DB-->>ES: التسجيل الجديد
+            ES->>NS: إشعار "waitlist"
+            DB-->>NS: تم إدخال الإشعار
+            ES-->>UI: { confirmed: false, waitlisted: true }
+            UI-->>U: "تمت إضافتك لقائمة الانتظار"
+        end
+    end
+    end
+
+    rect rgb(245, 250, 250)
+    Note over U,DB: 2) التسجيل في فعالية خاصة برابط دعوة - رمز إجباري
+    Note over U: يصل للحدث عبر رابط دعوة يحوي رمزاً في العنوان (؟code=...)
+    U->>UI: فتح صفحة الحدث (حدث خاص)
+    UI->>ES: registerForEvent(eventId, attendeeId, code)
+    ES->>DB: SELECT الحدث (visibility='private')
+    DB-->>ES: بيانات الحدث
+    alt لا يوجد رمز (فتح مباشر بلا رابط)
+        ES-->>UI: "An invitation code is required for this private event"
+    else يوجد رمز
+        ES->>DB: getLinkByCode(code)
+        DB-->>ES: رابط الدعوة
+        alt الرابط غير صالح
+            ES-->>UI: "Invalid invitation link"
+        else الرابط مستخدم مسبقاً
+            ES-->>UI: "This invitation link has already been used"
+        else الرابط لفعالية أخرى
+            ES-->>UI: "This invitation link does not belong to this event"
+        else بريد الحضور لا يطابق المدعو
+            ES->>DB: SELECT بريد الحضور مقابل بريد الدعوة
+            DB-->>ES: نتيجة المطابقة
+            ES-->>UI: "This invitation was sent to a different email address"
+        else كل الفحوصات سليمة
+            ES->>DB: INSERT التسجيل status='confirmed'
+            DB-->>ES: التسجيل الجديد
+            ES->>TS: generateTicket(registrationId, event.title)
+            TS->>DB: INSERT التذكرة
+            DB-->>TS: التذكرة
+            ES->>DB: markLinkAsUsed(link.id)
+            DB-->>ES: تم تعليم الرابط مستخدماً
+            ES->>NS: إشعار للمنظم "invitation_used" + إشعار "registration_confirmation"
+            DB-->>NS: تم الإدخال
+            ES-->>UI: { confirmed, waitlisted: false }
+            UI-->>U: "تم التسجيل بتذكرة فورية"
+        end
+    end
+    end
+
+    rect rgb(255, 248, 245)
+    Note over U,DB: 3) إلغاء التسجيل + ترقية قائمة الانتظار
+    U->>UI: "إلغاء التسجيل"
+    UI->>ES: cancelRegistration(id)
+    ES->>DB: SELECT التسجيل (status)
+    DB-->>ES: حالة التسجيل
+    alt التسجيل مؤكّد (confirmed)
+        ES->>DB: UPDATE التسجيل status='cancelled'
+        ES->>DB: SELECT أول عنصر في قائمة الانتظار (بالترتيب)
+        DB-->>ES: الحضور الأول في قائمة الانتظار (إن وُجد)
+        alt يوجد عنصر في قائمة الانتظار
+            ES->>DB: UPDATE ترقيته إلى status='confirmed'
+            ES->>TS: generateTicket للحضور المرقّى
+            DB-->>TS: تذكرة جديدة
+            ES->>NS: إشعار ترقية "notify_waitlist_promotion"
+            DB-->>NS: تم الإدخال
+        else لا يوجد عنصر
+            Note over ES: لا ترقية - طرف سهل
+        end
+        ES-->>UI: نجاح الإلغاء
+        UI-->>U: "تم إلغاء تسجيلك"
+    else التسجيل في قائمة الانتظار أو ملغى
+        ES->>DB: UPDATE التسجيل status='cancelled'
+        DB-->>ES: تم
+        ES-->>UI: نجاح الإلغاء
+        UI-->>U: "تم إلغاء تسجيلك"
+    end
+    end
+
+    rect rgb(250, 245, 250)
+    Note over U,DB: 4) إنشاء دعوة - بواسطة المنظم (Org)
+    Note over U: هذه المرحلة يخصّ المنظم (Organizer) وليس الحضور
+    participant O as المنظم (Organizer)
+    O->>UI: صفحة إدارة الدعوات
+    UI->>ES: createLink(eventId, email)
+    ES->>DB: INSERT invitation_links (code=12 حرف)
+    DB-->>ES: رابط الدعوة
+    ES-->>UI: الرابط/الرمز
+    UI-->>O: يشارك الرابط مع المدعو
+    end

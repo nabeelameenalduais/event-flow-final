@@ -1,0 +1,51 @@
+---
+title: EventFlow - نشاط تسجيل الحضور/المغادرة (Check-in / Check-out) - بواسطة المنظم
+---
+%% المصدر: src/services/attendanceService.ts (checkIn, checkOut, findTicketByCode,
+%%          markAutoAttendance), src/pages/AttendanceManagement.tsx (لوحة المنظم)
+%% الفاعل: المنظم (Organizer) - شاشة الحضور في لوحة المنظم.
+%% ملاحظة: لا توجد خطوة تدقيق (audit) في checkIn فعلياً.
+
+flowchart TD
+    Start(["النشاط: تسجيل الحضور (Check-in)"]) --> Mode["(المنظم) اختيار طريقة البحث<br/>مسح QR أو إدخال الرمز يدوياً"]
+
+    Mode -- "مسح QR" --> Scan["(المنظم) قراءة رمز التذكرة<br/>html5-qrcode من كاميرا الحضور"]
+    Scan --> Code
+    Mode -- "إدخال يدوي" --> Manual["(المنظم) كتابة رمز التذكرة"]
+    Manual --> Code["(النظام) البحث عن التذكرة<br/>findTicketByCode(unique_code)"]
+
+    Code --> T1{"(النظام) هل وُجدت تذكرة صالحة؟<br/>التسجيل confirmed"}
+
+    T1 -->|"لا تُوجد / غير confirmed"| ErrNF["نتيجة: لا توجد تذكرة صالحة بهذا الرمز"] --> Retry{"هل يعيد المحاولة؟"}
+    T1 -->|"نعم"| Show["(المنظم) عرض تفاصيل الحضور<br/>الاسم + الحالة للتأكيد"]
+    Show --> Confirm{"(المنظم) تأكيد تسجيل الحضور؟"}
+
+    Confirm -->|"لا"| Retry
+    Confirm -->|"نعم"| Check["(النظام) checkIn(ticket.id)<br/>التحقق من حالة التذكرة والتسجيل"]
+    Check --> T2{"(النظام) التذكرة بحالة صالحة؟"}
+
+    T2 -->|"مستخدمة مسبقاً"| ErrUsed["نتيجة: مقيّد مسبقاً (Ticket already checked in)"] --> Retry
+    T2 -->|"التسجيل ليس confirmed"| ErrReg["نتيجة: لا يمكن الحضور (not confirmed)"] --> Retry
+    T2 -->|"صالحة"| MarkUsed["(النظام) تعليم التذكرة مستخدمة<br/>UPDATE tickets SET status='used'"]
+    MarkUsed --> Att["(النظام) تسجيل حضور<br/>INSERT attendance (check_in_time = now)"]
+    Att --> Ok["النتيجة: تم تسجيل الحضور بنجاح"] --> Out{"هل يسجّل المغادرة؟"}
+
+    Out -->|"نعم"| CheckOut["(النظام) checkOut(attendanceId)<br/>UPDATE check_out_time = now"] --> Done(["الانتهاء: اكتملت عملية الحضور"])
+    Out -->|"لا"| Done
+
+    Retry -->|"نعم"| Mode
+    Retry -->|"لا"| GiveUp(["الانتهاء: بدون تسجيل حضور"])
+
+    subgraph Auto["حضور تلقائي - الفعاليات أونلاين (بفتح رابط الاجتماع)"]
+        Start2(["النشاط: الحضور أونلاين"]) --> FindT["(النظام) إيجاد تذكرة الحضور<br/>findTicketByAttendee"]
+        FindT --> A1{"(النظام) هل توجد تذكرة صالحة confirmed؟"}
+        A1 -->|"لا"| NoAct["لا يُسجَّل حضور"]
+        A1 -->|"نعم"| A2{"(النظام) هل سُجّل حضور سابقاً؟<br/>(idempotent)"}
+        A2 -->|"نعم"| NoAct2["لا يُكرَّر"]
+        A2 -->|"لا"| Mark2["(النظام) تعليمها مستخدمة<br/>UPDATE tickets = used"] --> Ins["(النظام) تسجيل حضور"] --> NoAct2["تم الحضور تلقائياً"]
+    end
+
+    classDef fail fill:#ffdddd,stroke:#cc0000
+    classDef ok fill:#ddffdd,stroke:#008800
+    class ErrNF,ErrUsed,ErrReg fail
+    class Ok,Done,GiveUp,NoAct,NoAct2 ok

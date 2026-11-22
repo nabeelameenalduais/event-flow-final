@@ -1,0 +1,227 @@
+' ============================================================================
+' PART 2/3 - ENUMS + SERVICE LAYER (included by 02_class.puml)
+' Sources: src/types/index.ts, src/constants.ts, src/services/*.ts
+' ============================================================================
+package "Enums (src/types/index.ts)" as P_ENUM {
+  enum RoleName {
+    ADMIN = "admin"
+    ORGANIZER = "organizer"
+    ATTENDEE = "attendee"
+  }
+  enum EventStatus {
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+  }
+  enum EventVisibility {
+    PUBLIC = "public"
+    PRIVATE = "private"
+  }
+  enum EventType {
+    IN_PERSON = "in_person"
+    ONLINE = "online"
+  }
+  enum RegistrationStatus {
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    WAITLISTED = "waitlisted"
+  }
+  enum TicketStatus {
+    VALID = "valid"
+    USED = "used"
+    INVALID = "invalid"
+  }
+  enum ChatChannelType {
+    EVENT = "event"
+    DIRECT = "direct"
+  }
+  enum RatingType {
+    STARS = "stars"
+    EMOJI = "emoji"
+    CUSTOM = "custom"
+  }
+  enum EvaluationPrivacy {
+    SECRET = "secret"
+    PUBLIC = "public"
+  }
+  enum EvaluationQuestionType {
+    RATING = "rating"
+    TEXT = "text"
+    CHOICE = "choice"
+  }
+  enum CostType {
+    PLANNED = "planned"
+    ACTUAL = "actual"
+  }
+  enum NotificationType {
+    REGISTRATION_CONFIRMED = "registration_confirmed"
+    EVENT_REMINDER = "event_reminder"
+    EVENT_CANCELLED = "event_cancelled"
+    NEW_MESSAGE = "new_message"
+    INVITATION_ACCEPTED = "invitation_accepted"
+    NEW_INVITATION = "new_invitation"
+    EVENT_UPDATE = "event_update"
+  }
+  enum AuditAction {
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+    LOGIN = "login"
+    LOGOUT = "logout"
+    REGISTER = "register"
+    ATTENDANCE = "attendance"
+    EVALUATION = "evaluation"
+    CHECKIN = "checkin"
+    PASSWORD_RESET = "password_reset"
+  }
+  enum AuthErrorCode {
+    USER_NOT_FOUND = "USER_NOT_FOUND"
+    INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
+    USER_SUSPENDED = "USER_SUSPENDED"
+    RATE_LIMITED = "RATE_LIMITED"
+    ACCOUNT_LOCKED = "ACCOUNT_LOCKED"
+    TOKEN_INVALID = "TOKEN_INVALID"
+    TOKEN_EXPIRED = "TOKEN_EXPIRED"
+    SESSION_NOT_FOUND = "SESSION_NOT_FOUND"
+  }
+}
+
+package "Service Layer (src/services) -- Repository Pattern" as P_SERVICE {
+  class AuthService <<service>> {
+    + login(email, password) : Promise<LoginResult>
+    + register(data) : Promise<void>
+    + logout() : Promise<void>
+    + requestPasswordReset(email) : Promise<void>
+    + resetPassword(token, newPassword) : Promise<void>
+    + hasPermission(requiredRole) : boolean
+  }
+  class EventService <<service>> {
+    + createEvent(data) : Promise<Event>
+    + updateEvent(id, data) : Promise<Event>
+    + deleteEvent(id) : Promise<void>
+    + archiveEvent(id) : Promise<void>
+    + getEvent(id) : Promise<Event>
+    + listEvents(filters) : Promise<Event[]>
+    + listOrganizerEvents(organizerId) : Promise<Event[]>
+    + updateEventStatus(id, status) : Promise<Event>
+    + generateMeetingLink(id) : Promise<Event>
+  }
+  class TicketService <<service>> {
+    + issueTicket(registrationId) : Promise<Ticket>
+    + getTicketByCode(code) : Promise<Ticket>
+    + getTicketsForEvent(eventId) : Promise<Ticket[]>
+    + markUsed(ticketId) : Promise<void>
+    + invalidate(ticketId) : Promise<void>
+  }
+  class AttendanceService <<service>> {
+    + checkIn(ticketCode) : Promise<Attendance>
+    + checkOut(ticketId) : Promise<Attendance>
+    + getAttendanceForEvent(eventId) : Promise<Attendance[]>
+    + getAttendanceSummary(eventId) : Promise<Object>
+  }
+  class RegistrationService <<service>> {
+    + register(eventId, attendeeId) : Promise<Registration>
+    + cancel(registrationId) : Promise<void>
+    + confirm(registrationId) : Promise<void>
+    + waitlist(eventId, attendeeId) : Promise<Registration>
+    + getForEvent(eventId) : Promise<Registration[]>
+    + isRegistered(eventId, attendeeId) : Promise<boolean>
+  }
+  class InvitationService <<service>> {
+    + createInvitation(eventId, email) : Promise<InvitationLink>
+    + accept(code, attendeeId) : Promise<void>
+    + decline(code) : Promise<void>
+    + listForEvent(eventId) : Promise<InvitationLink[]>
+  }
+  class EvaluationService <<service>> {
+    + createEvaluation(eventId, data) : Promise<Evaluation>
+    + addQuestion(evaluationId, data) : Promise<EvaluationQuestion>
+    + submit(evaluationId, attendeeId, data) : Promise<void>
+    + getResults(evaluationId) : Promise<Object>
+    + getPublicSubmissions(eventId) : Promise<EvaluationSubmission[]>
+  }
+  class ChatService <<service>> {
+    + createChannel(eventId, type, users) : Promise<ChatChannel>
+    + sendMessage(channelId, senderId, content) : Promise<ChatMessage>
+    + getMessages(channelId) : Promise<ChatMessageWithSender[]>
+    + getChannelsForUser(userId, eventId) : Promise<ChatChannel[]>
+  }
+  class UserService <<service>> {
+    + getUsers(role?) : Promise<User[]>
+    + getUserById(id) : Promise<User>
+    + updateProfile(userId, data) : Promise<Profile>
+    + suspendUser(id) : Promise<void>
+    + activateUser(id) : Promise<void>
+  }
+  class OrganizerService <<service>> {
+    + assignOrganizer(eventId, userId) : Promise<void>
+    + removeOrganizer(eventId, userId) : Promise<void>
+    + listOrganizers(eventId) : Promise<EventOrganizer[]>
+  }
+  class NotificationService <<service>> {
+    + create(userId, type, message) : Promise<Notification>
+    + markRead(id) : Promise<void>
+    + markAllRead(userId) : Promise<void>
+    + listForUser(userId) : Promise<Notification[]>
+  }
+  class AuditService <<service>> {
+    + log(action, entityType?, entityId?, details?) : Promise<void>
+    + list(filters?) : Promise<AuditLog[]>
+  }
+  class DeviceSessionService <<service>> {
+    + listForUser(userId) : Promise<DeviceSession[]>
+    + revoke(sessionId) : Promise<void>
+    + revokeAll(userId) : Promise<void>
+  }
+  class SessionService <<service>> {
+    + listUserSessions(userId) : Promise<Session[]>
+    + revokeSession(sessionId) : Promise<void>
+    + getActiveSession() : Promise<DeviceSession>
+  }
+  class CostService <<service>> {
+    + addCost(eventId, data) : Promise<EventCost>
+    + updateCost(id, data) : Promise<EventCost>
+    + deleteCost(id) : Promise<void>
+    + listForEvent(eventId) : Promise<EventCost[]>
+    + getTotal(eventId, costType?) : Promise<number>
+  }
+  class FeedbackService <<service>> {
+    + submit(eventId, attendeeId, rating, comment) : Promise<Feedback>
+    + respond(id, response) : Promise<void>
+    + listForEvent(eventId) : Promise<Feedback[]>
+    + getSummary(eventId) : Promise<Object>
+  }
+  class CategoryService <<service>> {
+    + list() : Promise<Category[]>
+    + create(data) : Promise<Category>
+    + update(id, data) : Promise<Category>
+    + delete(id) : Promise<void>
+  }
+  class VenueService <<service>> {
+    + list() : Promise<Venue[]>
+    + create(data) : Promise<Venue>
+    + update(id, data) : Promise<Venue>
+    + delete(id) : Promise<void>
+  }
+  class FileService <<service>> {
+    + upload(file, folder) : Promise<FileItem>
+    + delete(id) : Promise<void>
+    + list(folder?) : Promise<FileItem[]>
+  }
+  class SettingsService <<service>> {
+    + getSettings() : Promise<AppSettings>
+    + updateSettings(data) : Promise<AppSettings>
+    + getEmailTemplate(type) : Promise<EmailTemplate>
+    + updateEmailTemplate(type, data) : Promise<EmailTemplate>
+  }
+  class DashboardService <<service>> {
+    + getOrganizerStats(userId) : Promise<Object>
+    + getAdminStats() : Promise<Object>
+  }
+  class ReportsService <<service>> {
+    + getEventReport(eventId) : Promise<Object>
+    + getSystemReport() : Promise<Object>
+    + exportEventReport(eventId, format) : Promise<Blob>
+  }
+}

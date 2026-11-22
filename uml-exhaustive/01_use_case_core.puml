@@ -1,0 +1,227 @@
+' ============================================================================
+' EVENTFLOW - CORE USE CASE DIAGRAM (Academic-Classic, Portrait layout)
+' Tool   : PlantUML (usecase diagram)
+' Scope  : Core use cases only, OMG/UML-standard semantics.
+' ----------------------------------------------------------------------------
+' ACADEMIC COMPLIANCE:
+'   - No packages/subgroups inside the system boundary (rejected academically):
+'     all use cases sit directly inside the system rectangle.
+'   - Actors placed on the LEFT and RIGHT (primary on left, management on right).
+'   - Shared use cases (multiple actors can perform them) are placed FIRST (top)
+'     so the reader never mistakes a multi-actor task for a single-actor one.
+'   - Vertical (portrait) flow, arrows kept clear to avoid crossing/loss of trace.
+' ============================================================================
+
+@startuml EventFlow-Core-UseCases
+' ---------- Layout & skin ----------
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #1F3864
+  ArrowColor #1F3864
+}
+skinparam sequenceArrowThickness 1.5
+skinparam ArrowColor #333333
+skinparam noteBackgroundColor #FEF9C3
+skinparam noteBorderColor #CA8A04
+skinparam package {
+  BackgroundColor #F4F7FB
+  BorderColor #2E74B5
+  FontColor #17365D
+}
+
+' ---------- External (secondary) actors ----------
+actor "Supabase" as SUPABASE <<system>>
+actor "LM Studio (Local LLM)" as LMS_LOCAL <<system>>
+actor "Camera / QR" as CAMERA <<device>>
+actor "Email Gateway (Simulated)" as EMAIL <<external>>
+
+' ---------- Primary actors ----------
+' LEFT side (consumer/request roles)
+actor "Visitor" as VISITOR
+actor "Attendee" as ATTENDEE
+' RIGHT side (management/administration roles)
+actor "Organizer" as ORGANIZER
+actor "Admin" as ADMIN
+
+' Generalization (inheritance):
+' Attendee is-a Visitor, Organizer is-a Visitor, Admin is-a Organizer
+VISITOR <|-- ATTENDEE
+VISITOR <|-- ORGANIZER
+ORGANIZER <|-- ADMIN
+
+' ============================================================================
+' SYSTEM BOUNDARY - all use cases sit directly inside (no packages)
+' ============================================================================
+rectangle "EventFlow Platform" as SYSTEM_BOUNDARY {
+
+  ' ----------------------------------------------------------------
+  ' SHARED USE CASES - FIRST (top): perrformed by MORE THAN ONE actor.
+  '   - Create/Edit/Soft-Delete, Publish/Archive/Unpublish, Duplicate
+  '   - Manage Profile & Device Sessions  -> Organizer AND Admin
+  ' ----------------------------------------------------------------
+  together {
+    usecase "Create / Edit / Soft-Delete Event" as UC20
+    usecase "Publish / Archive / Unpublish Event" as UC21
+    usecase "Duplicate Event" as UC22
+    usecase "Manage Profile & Device Sessions" as UC31
+  }
+
+  ' ----------------------------------------------------------------
+  ' VISITOR USE CASES (public & guest)
+  ' ----------------------------------------------------------------
+  together {
+    usecase "Browse Published Events" as UC01
+    usecase "View Event Details" as UC02
+    usecase "Ask AI Assistant (Search/Discover)" as UC03
+    usecase "Register an Account" as UC04
+    usecase "Log In" as UC05
+    usecase "Request Password Reset" as UC06
+  }
+
+  ' ----------------------------------------------------------------
+  ' ATTENDEE USE CASES
+  ' ----------------------------------------------------------------
+  together {
+    usecase "Register for an Event" as UC10
+    usecase "Cancel Own Registration" as UC11
+    usecase "View Ticket (QR)" as UC12
+    usecase "Download Ticket" as UC13
+    usecase "Submit Feedback" as UC14
+    usecase "Submit Event Evaluation" as UC15
+    usecase "Join Event Chat" as UC16
+    usecase "View Notifications" as UC17
+    usecase "Join Online Meeting (Auto-Attendance)" as UC18
+  }
+
+  ' ----------------------------------------------------------------
+  ' ORGANIZER USE CASES
+  ' ----------------------------------------------------------------
+  together {
+    usecase "Manage Event Schedule" as UC23
+    usecase "Manage Event Registrations" as UC24
+    usecase "QR Check-In / Check-Out" as UC25
+    usecase "Generate Invitation Links" as UC26
+    usecase "Manage Event Costs" as UC27
+    usecase "Build Evaluation" as UC28
+    usecase "View Evaluation Results" as UC29
+    usecase "Respond to Feedback" as UC30
+    usecase "Send Event Reminder" as UC32
+    usecase "Set Online Meeting Link" as UC33
+  }
+
+  ' ----------------------------------------------------------------
+  ' ADMIN USE CASES
+  ' ----------------------------------------------------------------
+  together {
+    usecase "Manage Users" as UC40
+    usecase "Manage Categories" as UC41
+    usecase "Manage Venues" as UC42
+    usecase "Manage Files (Storage)" as UC43
+    usecase "Assign Event Organizers" as UC44
+    usecase "View Reports & Export CSV" as UC45
+    usecase "Manage System Settings" as UC46
+    usecase "Security Center (Audit Logs)" as UC47
+    usecase "Set Organizer manage-all-events Flag" as UC48
+  }
+}
+' End system boundary
+
+' ============================================================================
+' ACTOR ASSOCIATIONS
+' ============================================================================
+' ---- LEFT: Visitor (anon) ----
+VISITOR --> UC01
+VISITOR --> UC02
+VISITOR --> UC03
+VISITOR --> UC04
+VISITOR --> UC05
+VISITOR --> UC06
+LMS_LOCAL --> UC03 : "chat/completions"
+
+' ---- LEFT: Attendee ----
+ATTENDEE --> UC10
+ATTENDEE --> UC11
+ATTENDEE --> UC12
+ATTENDEE --> UC13
+ATTENDEE --> UC14
+ATTENDEE --> UC15
+ATTENDEE --> UC16
+ATTENDEE --> UC17
+ATTENDEE --> UC18
+
+' ---- RIGHT: Organizer (own) ----
+ORGANIZER --> UC23
+ORGANIZER --> UC24
+ORGANIZER --> UC25
+ORGANIZER --> UC26
+ORGANIZER --> UC27
+ORGANIZER --> UC28
+ORGANIZER --> UC29
+ORGANIZER --> UC30
+ORGANIZER --> UC32
+ORGANIZER --> UC33
+
+' ---- SHARED use cases: BOTH organizer AND admin ----
+ORGANIZER --> UC20
+ORGANIZER --> UC21
+ORGANIZER --> UC22
+ORGANIZER --> UC31
+ADMIN --> UC20
+ADMIN --> UC21
+ADMIN --> UC22
+ADMIN --> UC31
+
+' ---- RIGHT: Admin (own) ----
+ADMIN --> UC40
+ADMIN --> UC41
+ADMIN --> UC42
+ADMIN --> UC43
+ADMIN --> UC44
+ADMIN --> UC45
+ADMIN --> UC46
+ADMIN --> UC47
+ADMIN --> UC48
+
+' ============================================================================
+' <<include>> (MANDATORY SUB-FLOWS)
+' ============================================================================
+UC10 ..> UC12 : <<include>>\nGenerate QR ticket
+UC10 ..> UC17 : <<include>>\nReceive confirmation
+UC05 ..> UC17 : <<include>>\nCreate device session
+UC25 ..> UC12 : <<include>>\nValidate ticket
+UC15 ..> UC17 : <<include>>\nNotify on submission
+UC21 ..> UC20 : <<include>>\nPersist status change
+
+' ============================================================================
+' <<extend>> (CONDITIONAL / EXCEPTION SUB-FLOWS)
+' ============================================================================
+UC10 ..> UC26 : <<extend>>\n[private + invite code]
+UC10 ..> UC11 : <<extend>>\n[capacity full] -> waitlist
+UC18 ..> UC12 : <<extend>>\n[link visible 1h before]
+UC03 ..> UC02 : <<extend>>\n[tool get_event_details]
+
+' ============================================================================
+' NOTES - scenario coverage (academic review)
+' ============================================================================
+note right of UC12
+  Check-in validates ticket
+  ownership & status.
+end note
+
+legend bottom
+  Primary actors: Visitor / Attendee (left)
+                  Organizer / Admin (right)
+  Generalization: Attendee->Visitor,
+                  Organizer->Visitor,
+                  Admin->Organizer
+  <<include>> = mandatory sub-flow
+  <<extend>>  = conditional/exception sub-flow
+  Shared use cases (multi-actor) are listed first (top).
+endlegend
+
+@enduml

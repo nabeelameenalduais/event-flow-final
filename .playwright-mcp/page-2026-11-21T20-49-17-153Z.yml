@@ -1,0 +1,139 @@
+- generic [ref=f9e5]:
+  - complementary [ref=f9e6]:
+    - link "EventFlow" [ref=f9e8] [cursor=pointer]:
+      - /url: /dashboard
+    - navigation [ref=f9e10]:
+      - link "Dashboard" [ref=f9e11] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Browse Events" [ref=f9e17] [cursor=pointer]:
+        - /url: /events
+      - link "Event Requests" [ref=f9e20] [cursor=pointer]:
+        - /url: /dashboard/event-requests
+      - link "My Events" [ref=f9e23] [cursor=pointer]:
+        - /url: /dashboard/events
+      - link "Bans" [ref=f9e27] [cursor=pointer]:
+        - /url: /dashboard/bans
+      - link "Finance" [ref=f9e31] [cursor=pointer]:
+        - /url: /dashboard/finance
+      - link "Audience" [ref=f9e35] [cursor=pointer]:
+        - /url: /dashboard/audience
+      - link "Campaigns" [ref=f9e41] [cursor=pointer]:
+        - /url: /dashboard/campaigns
+      - link "Users" [ref=f9e45] [cursor=pointer]:
+        - /url: /dashboard/admin/users
+      - link "Categories" [ref=f9e58] [cursor=pointer]:
+        - /url: /dashboard/admin/categories
+      - link "Venues" [ref=f9e63] [cursor=pointer]:
+        - /url: /dashboard/admin/venues
+      - link "Files" [ref=f9e68] [cursor=pointer]:
+        - /url: /dashboard/admin/files
+      - link "Reports" [ref=f9e73] [cursor=pointer]:
+        - /url: /dashboard/admin/reports
+      - link "Broadcast" [ref=f9e76] [cursor=pointer]:
+        - /url: /dashboard/admin/broadcast
+      - link "Password Resets" [ref=f9e80] [cursor=pointer]:
+        - /url: /dashboard/admin/password-resets
+      - link "Settings" [ref=f9e84] [cursor=pointer]:
+        - /url: /dashboard/admin/settings
+      - link "Security" [ref=f9e88] [cursor=pointer]:
+        - /url: /dashboard/admin/security
+  - generic [ref=f9e91]:
+    - banner [ref=f9e92]:
+      - generic [ref=f9e94]:
+        - button "Language" [ref=f9e95]:
+          - generic [ref=f9e99]: English
+        - button "Toggle theme" [ref=f9e100]
+        - button "Notifications" [ref=f9e103]
+        - button "AA Alice Admin admin" [ref=f9e107]:
+          - generic [ref=f9e108]: AA
+          - generic [ref=f9e110]:
+            - paragraph [ref=f9e111]: Alice Admin
+            - paragraph [ref=f9e112]: admin
+    - main [ref=f9e115]:
+      - generic [ref=f9e122]:
+        - button "Back to Events" [ref=f9e123]
+        - heading "Create Event" [level=1] [ref=f9e124]
+        - generic [ref=f9e125]:
+          - generic [ref=f9e126]:
+            - heading "Basic Information" [level=2] [ref=f9e127]
+            - generic [ref=f9e128]:
+              - generic [ref=f9e129]: Event Type
+              - generic [ref=f9e130]:
+                - button "In Person" [ref=f9e131]
+                - button "Online (Virtual)" [ref=f9e132]
+                - button "Hybrid (In Person + Online)" [ref=f9e133]
+            - generic [ref=f9e134]:
+              - generic [ref=f9e135]: Title
+              - textbox "Event title" [ref=f9e136]: QA-MYEVENTS-FIX-DELETE
+            - generic [ref=f9e137]:
+              - generic [ref=f9e138]: Description
+              - textbox "Describe your event..." [ref=f9e139]: QA controlled test event
+            - generic [ref=f9e140]:
+              - generic [ref=f9e141]:
+                - generic [ref=f9e142]: Venue *
+                - combobox [ref=f9e143]:
+                  - option "Select a venue"
+                  - option "Grand Convention Center (500 seats)" [selected]
+                  - option "Tech Hub Auditorium (200 seats)"
+              - generic [ref=f9e144]:
+                - generic [ref=f9e145]: Category
+                - combobox [active] [ref=f9e146]:
+                  - option "Select a category"
+                  - option "Conference" [selected]
+                  - option "Exhibition"
+                  - option "Networking"
+                  - option "Seminar"
+                  - option "Student Activity"
+                  - option "Workshop"
+          - generic [ref=f9e147]:
+            - heading "Date & Capacity" [level=2] [ref=f9e148]
+            - generic [ref=f9e149]:
+              - generic [ref=f9e150]:
+                - generic [ref=f9e151]: Start date & time
+                - textbox [ref=f9e152]: 2026-12-01T10:00
+              - generic [ref=f9e153]:
+                - generic [ref=f9e154]: End date & time
+                - textbox [ref=f9e155]: 2026-12-01T12:00
+            - generic [ref=f9e156]:
+              - generic [ref=f9e157]:
+                - generic [ref=f9e158]: Registration deadline
+                - textbox [ref=f9e159]: 2026-11-30T10:00
+              - generic [ref=f9e160]:
+                - generic [ref=f9e161]: Capacity
+                - spinbutton [ref=f9e162]: "100"
+          - generic [ref=f9e163]:
+            - heading "Settings" [level=2] [ref=f9e164]
+            - generic [ref=f9e165]:
+              - generic [ref=f9e166]:
+                - generic [ref=f9e167]: Contact email
+                - textbox "contact@example.com" [ref=f9e168]: qa@eventflow.com
+              - generic [ref=f9e169]:
+                - generic [ref=f9e170]: Visibility
+                - combobox [ref=f9e171]:
+                  - option "Public" [selected]
+                  - option "Private"
+          - generic [ref=f9e172]:
+            - button "Cancel" [ref=f9e173]
+            - button "Create Event (Draft)" [ref=f9e174]
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "EventFlow Assistant" [level=3]
+          - paragraph: Ask about events, venues & more
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: Hi there!
+        - paragraph: I can help you discover events, check venues, explore categories, and more. What would you like to know?
+    - generic:
+      - button "Upcoming events"
+      - button "Find by category"
+      - button "Available venues"
+      - button "Get tickets"
+    - generic:
+      - textbox "Ask about events, venues, categories..."
+      - button [disabled]
+  - button "Chat with EventFlow Assistant" [ref=f9e119]

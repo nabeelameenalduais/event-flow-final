@@ -1,0 +1,342 @@
+- generic:
+  - generic:
+    - generic:
+      - complementary [aria-hidden]:
+        - generic:
+          - link:
+            - /url: /dashboard
+            - generic: EventFlow
+        - navigation:
+          - link:
+            - /url: /dashboard
+            - text: لوحة التحكم
+          - link:
+            - /url: /events
+            - text: تصفّح الفعاليات
+          - link:
+            - /url: /dashboard/event-requests
+            - text: طلبات الفعاليات
+          - link:
+            - /url: /dashboard/events
+            - text: فعالياتي
+          - link:
+            - /url: /dashboard/bans
+            - text: الحظر
+          - link:
+            - /url: /dashboard/finance
+            - text: الشؤون المالية
+          - link:
+            - /url: /dashboard/audience
+            - text: الجمهور
+          - link:
+            - /url: /dashboard/campaigns
+            - text: الحملات
+      - generic [aria-hidden]:
+        - banner:
+          - generic:
+            - button:
+              - generic: العربية
+            - button
+            - button
+            - button [expanded]:
+              - generic: BO
+              - generic:
+                - paragraph: Bob Organizer
+                - paragraph: منظّم
+        - main:
+          - generic:
+            - generic:
+              - heading [level=1]: فعالياتي
+              - button: إنشاء فعالية
+            - generic:
+              - generic:
+                - textbox:
+                  - /placeholder: ابحث عن فعاليات...
+              - combobox:
+                - generic: كل الحالات
+              - combobox:
+                - generic: كل مستويات الظهور
+              - combobox:
+                - generic: الأحدث أولًا
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Data Science Bootcamp
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ١٥ أكتوبر ٢٠٢٦
+                      - generic: Tech Hub Auditorium
+                      - generic: 60 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: DevOps Days
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ١ أكتوبر ٢٠٢٦
+                      - generic: Grand Convention Center
+                      - generic: 400 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Draft Planning Session
+                      - generic: مسودة
+                      - generic: خاص
+                    - generic:
+                      - generic: ١٠ سبتمبر ٢٠٢٦
+                      - generic: Grand Convention Center
+                      - generic: 20 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الدعوات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: نشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Product Launch Meetup
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ٥ سبتمبر ٢٠٢٦
+                      - generic: Tech Hub Auditorium
+                      - generic: 120 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Hackathon 2026
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ٢٢ أغسطس ٢٠٢٦
+                      - generic: Grand Convention Center
+                      - generic: 200 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Design Systems Conference
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ١٢ أغسطس ٢٠٢٦
+                      - generic: Grand Convention Center
+                      - generic: 300 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Startup Mixer
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ٥ أغسطس ٢٠٢٦
+                      - generic: Tech Hub Auditorium
+                      - generic: 100 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: dd
+                      - generic: تم أرشفته
+                      - generic: خاص
+                    - generic:
+                      - generic: ٣٠ يوليو ٢٠٢٦
+                      - generic: Grand Convention Center
+                      - generic: 100 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الدعوات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إعادة النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: nnn
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ٢٨ يوليو ٢٠٢٦
+                      - generic: Grand Convention Center
+                      - generic: 100 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: React Workshop
+                      - generic: تم نشره
+                      - generic: عام
+                    - generic:
+                      - generic: ١٥ يوليو ٢٠٢٦
+                      - generic: Tech Hub Auditorium
+                      - generic: 200 مقعد
+                - generic:
+                  - button: التسجيلات
+                  - button: الحضور
+                  - button: الجدول
+                  - button: التكاليف
+                  - button: التقييم
+                  - button: المحادثة
+                  - button: عرض
+                  - button: تعديل
+                  - button: إرسال تذكير
+                  - button: أرشفة
+                  - button: إلغاء النشر
+                  - button: نسخ
+                  - button: حذف
+            - generic:
+              - button [disabled]: السابق
+              - generic: صفحة 1 من 2
+              - button: التالي
+      - region "Notifications alt+T"
+      - generic [aria-hidden]:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=3]: مساعد EventFlow
+              - paragraph: اسأل عن الفعاليات والأماكن والمزيد
+          - generic:
+            - button
+        - generic:
+          - generic:
+            - paragraph: مرحبًا!
+            - paragraph: يمكنني مساعدتك في اكتشاف الفعاليات والتعرّف على الأماكن والفئات وغيرها. ما الذي تود معرفته؟
+        - generic:
+          - button: الفعاليات القادمة
+          - button: البحث حسب الفئة
+          - button: الأماكن المتاحة
+          - button: الحصول على التذاكر
+        - generic:
+          - textbox:
+            - /placeholder: اسأل عن الفعاليات والأماكن والفئات...
+          - button [disabled]
+      - button [aria-hidden]
+  - menu "BO Bob Organizer منظّم" [active] [ref=f11e76]:
+    - menuitem "الملف الشخصي" [ref=f11e77]
+    - separator [ref=f11e81]
+    - menuitem "تغيير المظهر" [ref=f11e82]
+    - separator [ref=f11e85]
+    - menuitem "تسجيل الخروج" [ref=f11e86]

@@ -1,0 +1,56 @@
+---
+title: EventFlow - نشاط تسجيل الحضور في فعالية (نشاط المنظم أولاً ثم الشروط)
+---
+%% المصدر: src/services/eventService.ts (registerForEvent)
+%% الفاعل: الحضور (Attendee) - مستخدم عادي.
+%% ملاحظات واقعية:
+%%   - المستخدم العادي يصل فقط إلى الفعاليات المنشورة والعامة، لذلك لا توجد
+%%     حالة "غير منشورة" في مساره.
+%%   - الفعالية العامة لا تتطلب رمزاً؛ الرمز مطلوب فقط للفعاليات الخاصة.
+%%   - النظام لا يكتب حالة pending إطلاقاً (فقط confirmed / waitlisted).
+
+flowchart TD
+    Start(["النشاط: تسجيل الحضور في فعالية"])
+
+    Start --> LoadEvent["(الحضور) فتح صفحة الحدث<br/>يصل فقط لفعالية منشورة عامة (published + public)"]
+    LoadEvent --> OpenCond{"(حدث) هل موعد التسجيل ساري؟<br/>الموعد لم ينتهِ والحدث لم ينتهِ"}
+
+    OpenCond -->|"لا - انتهى الموعد"| ErrDeadline["خطأ: The registration deadline has passed"] --> EndErr
+    OpenCond -->|"لا - انتهت الفعالية"| ErrEnded["خطأ: This event has already ended"] --> EndErr
+    OpenCond -->|"نعم"| VisCond{"(حدث) هل الفعالية خاصة؟<br/>visibility = private"}
+
+    VisCond -- "عامة" --> CheckDup{"(النظام) هل الحضور مسجّل مسبقاً؟"}
+    VisCond -- "خاصة" --> RequireCode{"(النظام) هل وُجد رمز دعوة في الرابط؟"}
+
+    RequireCode -->|"لا يوجد رمز"| ErrNoCode["خطأ: An invitation code is required for this private event"] --> EndErr
+    RequireCode -->|"يوجد رمز"| GetLink["(النظام) جلب رابط الدعوة<br/>getLinkByCode(code)"]
+    GetLink --> ValLink{"(النظام) تحقق من صحة رابط الدعوة"}
+
+    ValLink -->|"الرابط غير صالح"| ErrInv["خطأ: Invalid invitation link"] --> EndErr
+    ValLink -->|"الرابط مستخدم سابقاً"| ErrUsed["خطأ: This invitation link has already been used"] --> EndErr
+    ValLink -->|"الرابط لفعالية أخرى"| ErrWrong["خطأ: link does not belong to this event"] --> EndErr
+    ValLink -->|"بريد الحضور غير مطابق"| ErrMail["خطأ: invitation was sent to a different email address"] --> EndErr
+    ValLink -->|"سليم"| CheckDup
+
+    CheckDup -->|"مسجّل مسبقاً"| ErrDup["خطأ: Already registered for this event"] --> EndErr
+    CheckDup -->|"ليس مسجلاً"| CountSeats["(النظام) عدّ المسجّلين المؤكّدين<br/>COUNT status='confirmed'"]
+
+    CountSeats --> Full{"(النظام) هل السعة ممتلئة؟<br/>count >= capacity"}
+
+    Full -->|"نعم - ممتلئة"| Waitlist["(النظام) إضافة لقائمة الانتظار<br/>INSERT تسجيل status='waitlisted'"] --> NotifWait["إشعار: waitlist<br/>سيتنبّه عند توفر مقعد"] --> EndWait(["النتيجة: انتظار - لا تذكرة"])
+
+    Full -->|"لا - يوجد مقعد"| Confirm["(النظام) تأكيد التسجيل<br/>INSERT تسجيل status='confirmed'"] --> GenTicket["(النظام) إصدار تذكرة<br/>generateTicket: unique_code + QR"]
+    GenTicket --> NotifConf["إشعار: registration_confirmation"]
+    NotifConf --> IsPrivate{"هل هي فعالية خاصة؟"}
+
+    IsPrivate -->|"نعم"| MarkUsed["(النظام) تعليم الرابط مستخدماً<br/>markLinkAsUsed + إشعار المنظم invitation_used"]
+    IsPrivate -->|"لا"| Skip
+    MarkUsed --> Skip
+
+    Skip --> EndOk(["النتيجة: تم التسجيل - تذكرة جاهزة"])
+
+    EndErr(["النتيجة: فشل التسجيل - رسالة خطأ"]):::fail
+
+    classDef fail fill:#ffdddd,stroke:#cc0000
+    classDef ok fill:#ddffdd,stroke:#008800
+    class EndWait,EndOk ok

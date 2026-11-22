@@ -1,0 +1,44 @@
+- generic [ref=f7e3]:
+  - banner [ref=f7e4]:
+    - generic [ref=f7e6]:
+      - link "EventFlow" [ref=f7e7] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=f7e9]:
+        - link "Events" [ref=f7e74] [cursor=pointer]:
+          - /url: /events
+        - link "Dashboard" [ref=f7e91] [cursor=pointer]:
+          - /url: /dashboard
+      - generic [ref=f7e14]:
+        - button "Language" [ref=f7e77]:
+          - generic [ref=f7e19]: English
+        - button "Toggle theme" [ref=f7e78]
+        - link "Dashboard (Alice)" [ref=f7e92] [cursor=pointer]:
+          - /url: /dashboard
+  - main
+  - contentinfo [ref=f7e64]:
+    - generic [ref=f7e66]: © 2026 EventFlow. All rights reserved.
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=f7e93]:
+        - generic [ref=f7e97]: Signed in with admin@eventflow.com
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "EventFlow Assistant" [level=3]
+          - paragraph: Ask about events, venues & more
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: Hi there!
+        - paragraph: I can help you discover events, check venues, explore categories, and more. What would you like to know?
+    - generic:
+      - button "Upcoming events"
+      - button "Find by category"
+      - button "Available venues"
+      - button "Get tickets"
+    - generic:
+      - textbox "Ask about events, venues, categories..."
+      - button [disabled]
+  - button "Chat with EventFlow Assistant" [ref=f7e90]

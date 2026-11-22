@@ -1,0 +1,81 @@
+- generic [ref=f7e3]:
+  - banner [ref=f7e4]:
+    - generic [ref=f7e6]:
+      - link "EventFlow" [ref=f7e7] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=f7e9]:
+        - link "Home" [ref=f7e73] [cursor=pointer]:
+          - /url: /
+        - link "Events" [ref=f7e74] [cursor=pointer]:
+          - /url: /events
+        - link "About" [ref=f7e75] [cursor=pointer]:
+          - /url: /about
+        - link "Contact" [ref=f7e76] [cursor=pointer]:
+          - /url: /contact
+      - generic [ref=f7e14]:
+        - button "Language" [active] [ref=f7e77]:
+          - generic [ref=f7e19]: English
+        - button "Toggle theme" [ref=f7e78]
+        - link "Login" [ref=f7e79] [cursor=pointer]:
+          - /url: /login
+        - link "Register" [ref=f7e80] [cursor=pointer]:
+          - /url: /register
+  - main [ref=f7e25]:
+    - generic [ref=f7e30]:
+      - generic [ref=f7e31]:
+        - heading "Login" [level=1] [ref=f7e81]
+        - paragraph [ref=f7e37]: Welcome back to EventFlow
+      - generic [ref=f7e38]:
+        - generic [ref=f7e39]:
+          - generic [ref=f7e40]: Email
+          - textbox "you@example.com" [ref=f7e41]
+        - generic [ref=f7e42]:
+          - generic [ref=f7e43]: Password
+          - textbox "Enter your password" [ref=f7e82]
+        - button "Login" [ref=f7e83]
+        - generic [ref=f7e46]:
+          - link "Forgot password?" [ref=f7e84] [cursor=pointer]:
+            - /url: /forgot-password
+          - link "Create account" [ref=f7e85] [cursor=pointer]:
+            - /url: /register
+        - paragraph [ref=f7e49]:
+          - text: Deleted your account?
+          - link "Restore it within the recovery window" [ref=f7e86] [cursor=pointer]:
+            - /url: /restore-account
+      - generic [ref=f7e51]:
+        - paragraph [ref=f7e52]: Quick demo login
+        - generic [ref=f7e53]:
+          - button "Admin admin@eventflow.com / one" [ref=f7e87]:
+            - generic [ref=f7e55]: Admin
+            - generic [ref=f7e56]: admin@eventflow.com / one
+          - button "Organizer organizer@eventflow.com / one" [ref=f7e88]:
+            - generic [ref=f7e58]: Organizer
+            - generic [ref=f7e59]: organizer@eventflow.com / one
+          - button "Attendee attendee@eventflow.com / one" [ref=f7e89]:
+            - generic [ref=f7e61]: Attendee
+            - generic [ref=f7e62]: attendee@eventflow.com / one
+        - paragraph [ref=f7e63]: Click a role to sign in instantly.
+  - contentinfo [ref=f7e64]:
+    - generic [ref=f7e66]: © 2026 EventFlow. All rights reserved.
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "EventFlow Assistant" [level=3]
+          - paragraph: Ask about events, venues & more
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: Hi there!
+        - paragraph: I can help you discover events, check venues, explore categories, and more. What would you like to know?
+    - generic:
+      - button "Upcoming events"
+      - button "Find by category"
+      - button "Available venues"
+      - button "Get tickets"
+    - generic:
+      - textbox "Ask about events, venues, categories..."
+      - button [disabled]
+  - button "Chat with EventFlow Assistant" [ref=f7e90]

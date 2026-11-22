@@ -1,0 +1,258 @@
+' ============================================================================
+' EVENTFLOW - USE CASE DIAGRAM (Exhaustive)
+' Tool : PlantUML (usecase diagram)
+' Scope: All actors, all system boundaries, external systems, <<include>>,
+'        <<extend>> (with extension points), and generalization.
+' ============================================================================
+' Code traceability:
+'   - Actors come from the RoleName enum  : src/types/index.ts:1, src/constants.ts:27
+'   - Routes / guards                     : src/routes/index.tsx, ProtectedRoute.tsx, PublicRoute.tsx
+'   - Auth flows                          : src/services/authService.ts, src/contexts/AuthContext.tsx
+'   - Registration flow                   : src/services/eventService.ts:236 (registerForEvent)
+'   - Check-in / attendance               : src/services/attendanceService.ts, src/pages/AttendanceManagement.tsx
+'   - Evaluations                         : src/services/evaluationService.ts, supabase/schema.sql:574
+'   - Chat                                : src/services/chatService.ts, src/pages/EventChat.tsx
+'   - Chatbot                             : src/components/chat/useChat.ts (فعلي: LM Studio محلي)؛
+'                                           supabase/functions/chatbot/index.ts (تصميم بديل غير مستخدم)
+' ============================================================================
+
+@startuml EventFlow-UseCases
+' ---------- Layout & skin ----------
+skinparam backgroundColor white
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EFF6FF
+  BorderColor #1D4ED8
+  ArrowColor #475569
+}
+skinparam package {
+  BackgroundColor #F8FAFC
+  BorderColor #94A3B8
+}
+skinparam noteBackgroundColor #FEF9C3
+skinparam noteBorderColor #CA8A04
+
+' ---------- External systems ----------
+actor "Supabase" as SUPABASE <<system>>
+actor "LM Studio (Local LLM Server)" as LMS_LOCAL <<system>>
+actor "Camera / QR" as CAMERA <<device>>
+actor "Email Gateway (Simulated)" as EMAIL <<external>>
+
+' ---------- Primary actors ----------
+actor "Visitor" as VISITOR
+actor "Attendee" as ATTENDEE
+actor "Organizer" as ORGANIZER
+actor "Admin" as ADMIN
+
+' Generalization: Admin extends Organizer, Organizer extends Visitor, Attendee extends Visitor
+VISITOR <|-- ATTENDEE
+VISITOR <|-- ORGANIZER
+ORGANIZER <|-- ADMIN
+
+' ============================================================================
+' SYSTEM BOUNDARY
+' ============================================================================
+rectangle "EventFlow Platform (Frontend SPA + Supabase Backend)" as SYSTEM_BOUNDARY {
+
+  ' --------------------------------------------------------------------------
+  ' PUBLIC / GUEST USE CASES
+  ' --------------------------------------------------------------------------
+  package "Public & Guest Features" as PKG_PUBLIC {
+    usecase "UC01 Browse Published Events" as UC01
+    usecase "UC02 View Event Details" as UC02
+    usecase "UC03 Ask AI Assistant (Search/Discover)" as UC03
+    usecase "UC04 Register an Account" as UC04
+    usecase "UC05 Log In" as UC05
+    usecase "UC06 Request Password Reset" as UC06
+    usecase "UC07 Reset Password" as UC07
+    usecase "UC08 Contact / About Pages" as UC08
+  }
+
+  ' --------------------------------------------------------------------------
+  ' ATTENDEE USE CASES
+  ' --------------------------------------------------------------------------
+  package "Attendee Features" as PKG_ATTENDEE {
+    usecase "UC10 Register for an Event" as UC10
+    usecase "UC11 Cancel Own Registration" as UC11
+    usecase "UC12 View Ticket (QR)" as UC12
+    usecase "UC13 Download Ticket" as UC13
+    usecase "UC14 Submit Feedback (Review)" as UC14
+    usecase "UC15 Submit Event Evaluation" as UC15
+    usecase "UC16 Join Event Chat" as UC16
+    usecase "UC17 View Notifications" as UC17
+    usecase "UC18 Join Online Meeting (Auto-Attendance)" as UC18
+  }
+
+  ' --------------------------------------------------------------------------
+  ' ORGANIZER USE CASES
+  ' --------------------------------------------------------------------------
+  package "Organizer Features" as PKG_ORGANIZER {
+    usecase "UC20 Create / Edit / Soft-Delete Event" as UC20
+    usecase "UC21 Publish / Archive / Unpublish Event" as UC21
+    usecase "UC22 Duplicate Event" as UC22
+    usecase "UC23 Manage Schedule (Sessions & Speakers)" as UC23
+    usecase "UC24 Manage Registrations (Cancel)" as UC24
+    usecase "UC25 QR Check-In / Check-Out" as UC25
+    usecase "UC26 Generate Invitation Links (Single/Bulk)" as UC26
+    usecase "UC27 Manage Event Costs (Planned/Actual)" as UC27
+    usecase "UC28 Build Evaluation" as UC28
+    usecase "UC29 View Evaluation Results" as UC29
+    usecase "UC30 Respond to Feedback" as UC30
+    usecase "UC31 Manage Profile & Device Sessions" as UC31
+    usecase "UC32 Send Event Reminder" as UC32
+    usecase "UC33 Set Online Meeting Link" as UC33
+  }
+
+  ' --------------------------------------------------------------------------
+  ' ADMIN USE CASES
+  ' --------------------------------------------------------------------------
+  package "Admin Features" as PKG_ADMIN {
+    usecase "UC40 Manage Users (CRUD / Suspend / Activate)" as UC40
+    usecase "UC41 Manage Categories" as UC41
+    usecase "UC42 Manage Venues" as UC42
+    usecase "UC43 Manage Files (Storage)" as UC43
+    usecase "UC44 Assign Event Organizers" as UC44
+    usecase "UC45 View Reports & Export CSV" as UC45
+    usecase "UC46 Manage System Settings & Email Templates" as UC46
+    usecase "UC47 Security Center (Audit Logs)" as UC47
+    usecase "UC48 Set Organizer manage-all-events Flag" as UC48
+  }
+}
+
+' ============================================================================
+' ACTOR -> USE CASE ASSOCIATIONS
+' ============================================================================
+' ---- Visitor / Guest ----
+VISITOR --> UC01
+VISITOR --> UC02
+VISITOR --> UC03
+VISITOR --> UC04
+VISITOR --> UC05
+VISITOR --> UC06
+VISITOR --> UC07
+VISITOR --> UC08
+
+' ---- Attendee ----
+ATTENDEE --> UC10
+ATTENDEE --> UC11
+ATTENDEE --> UC12
+ATTENDEE --> UC13
+ATTENDEE --> UC14
+ATTENDEE --> UC15
+ATTENDEE --> UC16
+ATTENDEE --> UC17
+ATTENDEE --> UC18
+
+' ---- Organizer ----
+ORGANIZER --> UC20
+ORGANIZER --> UC21
+ORGANIZER --> UC22
+ORGANIZER --> UC23
+ORGANIZER --> UC24
+ORGANIZER --> UC25
+ORGANIZER --> UC26
+ORGANIZER --> UC27
+ORGANIZER --> UC28
+ORGANIZER --> UC29
+ORGANIZER --> UC30
+ORGANIZER --> UC31
+ORGANIZER --> UC32
+ORGANIZER --> UC33
+
+' ---- Admin ----
+ADMIN --> UC40
+ADMIN --> UC41
+ADMIN --> UC42
+ADMIN --> UC43
+ADMIN --> UC44
+ADMIN --> UC45
+ADMIN --> UC46
+ADMIN --> UC47
+ADMIN --> UC48
+
+' ============================================================================
+' <<include>> (MANDATORY SUB-FLOWS)
+' ============================================================================
+' Registration always requires capacity handling + (auto) ticket + notification
+UC10 ..> UC12 : <<include>>\n"Generate QR ticket (confirmed only)"
+UC10 ..> UC17 : <<include>>\n"Notify attendee (confirmation/waitlist)"
+UC25 ..> UC12 : <<include>>\n"Validate ticket ownership & status"
+UC05 ..> UC17 : <<include>>\n"Create device session & audit login"
+UC15 ..> UC17 : <<include>>\n"Notify on submission"
+UC21 ..> UC20 : <<include>>\n"Persist status change"
+
+' ============================================================================
+' <<extend>> (CONDITIONAL / EXCEPTION SUB-FLOWS) WITH EXTENSION POINTS
+' ============================================================================
+' --- UC10 Registration extension points ---
+UC10 ..> UC26 : <<extend>>\n"Extension Point:\n[private event + invite code]"
+UC26 ..> UC10 : <<extend>>\n"Invitation code verified & consumed"
+UC10 ..> UC11 : <<extend>>\n"Extension Point:\n[capacity full] -> waitlist\n(triggered only after success)"
+UC10 ..> UC17 : <<extend>>\n"Extension Point:\n[event ended / deadline passed]"
+
+' --- UC18 join online meeting extension ---
+UC18 ..> UC12 : <<extend>>\n"Extension Point:\n[link visible 1h before start]"
+UC18 ..> UC25 : <<extend>>\n"Extension Point:\n[auto-attendance idempotent]"
+
+' --- UC03 AI assistant extension points ---
+UC03 ..> UC02 : <<extend>>\n"Extension Point:\n[tool call get_event_details]"
+
+' ============================================================================
+' EXTERNAL SYSTEM RELATIONSHIPS
+' ============================================================================
+SUPABASE --> UC04 : "persists user + profile\n(register_user RPC)"
+SUPABASE --> UC05 : "verifies credentials\n(authenticate_user RPC)"
+SUPABASE --> UC25 : "attendance/tickets REST"
+SUPABASE --> UC12 : "tickets table + storage"
+LMS_LOCAL --> UC03 : "chat/completions\n(المسار الفعلي للواجهة)"
+CAMERA --> UC25 : "reads QR code"
+EMAIL --> UC06 : "reset link delivery\n(simulated in demo)"
+
+' ============================================================================
+' NOTES - COVERED SCENARIOS (for academic review)
+' ============================================================================
+note right of UC10
+  Scenarios covered by UC10:
+  -- happy path: published + public + capacity
+  -- alt: private event + invite code (valid / invalid /
+          used / wrong-event / wrong-email)
+  -- alt: capacity full -> waitlisted
+  -- fail: event not published, deadline passed,
+          event ended, duplicate registration
+end note
+
+note right of UC05
+  Scenarios covered by UC05:
+  -- success + device-session creation
+  -- fail: rate limit (5 attempts / 15 min)
+  -- fail: invalid credentials, suspended account
+  -- fallback: legacy SHA-256 when RPC missing (PGRST202)
+end note
+
+note right of UC25
+  Scenarios covered by UC25:
+  -- check-in, check-out, already processed
+  -- fail: ticket used, registration not confirmed
+  -- fallback: manual code entry when camera unavailable
+end note
+
+note right of UC03
+  Chatbot backend (actual): the SPA calls LM Studio locally
+  via /lmstudio/v1/chat/completions; tools are executed from
+  the browser directly against Supabase REST.
+  (Edge Function + OpenRouter remain in the repo as a
+  design alternative, NOT used by the current UI.)
+end note
+
+' ============================================================================
+' LEGEND
+' ============================================================================
+legend top right
+  Actor roles: Visitor (anon) -> Attendee / Organizer -> Admin
+  <<include>> = mandatory sub-flow
+  <<extend>>  = conditional/exception sub-flow
+  Extension Point = the named condition gate
+endlegend
+
+@enduml

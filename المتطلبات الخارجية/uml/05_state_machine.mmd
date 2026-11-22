@@ -1,0 +1,56 @@
+---
+title: EventFlow — State Machine Diagram
+---
+%% Event states: src/types/index.ts:47 + eventService.ts (publishEvent:184, archiveEvent:188, setDraft:192)
+%% Transitions shown exactly as offered in EventManagement.tsx:117-128 (Publish/Unpublish/Archive/Republish).
+%% Registration states: types/index.ts:130; produced by registerForEvent (confirmed|waitlisted, eventService.ts:284),
+%% cancelled by cancelRegistration (:379), waitlist promotion on cancel (:403-417).
+%% Ticket states: types/index.ts:140; valid -> used in attendanceService.ts:40 & :153.
+
+stateDiagram-v2
+    direction LR
+
+    state "Event" as Event {
+        [*] --> draft : createEvent / duplicateEvent
+        draft --> published : publishEvent (UI: Publish)
+        published --> draft : setDraft (UI: Unpublish)
+        published --> archived : archiveEvent (UI: Archive)
+        archived --> published : publishEvent (UI: Republish)
+        draft --> [*] : deleteEvent
+        published --> [*] : deleteEvent
+        archived --> [*] : deleteEvent
+    }
+
+    state "Registration" as Reg {
+        [*] --> confirmed : registerForEvent (capacity not full) (eventService.ts:284)
+        [*] --> waitlisted : registerForEvent (capacity full) (eventService.ts:284)
+        confirmed --> cancelled : cancelRegistration (eventService.ts:389)
+        waitlisted --> cancelled : cancelRegistration
+        waitlisted --> confirmed : waitlist promotion (spot freed, eventService.ts:403-417)
+    }
+
+    note right of Reg
+        "pending" is part of the RegistrationStatus
+        domain model (types/index.ts:130); the
+        operational flow uses confirmed / waitlisted
+        / cancelled.
+    end note
+
+    state "Ticket" as Tick {
+        [*] --> valid : generateTicketForRegistration (register / promotion)
+        valid --> used : checkIn (attendanceService.ts:40) / markAutoAttendance (:153)
+    }
+
+    note right of Tick
+        "invalid" is part of the TicketStatus domain
+        model (types/index.ts:140); the operational
+        flow uses valid / used.
+    end note
+
+    note right of Event
+        Transition guards enforced at service level:
+        - registerForEvent requires event.status === "published"
+          and deadline/end-date not passed (eventService.ts:244-252)
+        - deleteEvent is a soft delete (deletedAt timestamp)
+        No DB CHECK constraint restricts event status.
+    end note

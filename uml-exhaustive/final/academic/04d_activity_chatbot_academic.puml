@@ -1,0 +1,24 @@
+@startuml
+title Activity - AI Assistant (Chatbot) (Academic)
+skinparam shadowing false
+start
+:Open AI assistant chat widget;
+:User types a message & sends;
+repeat
+  :Append user message / tool result\nto conversation;
+  :Call POST /lmstudio/v1/chat/completions\n(with tool definitions);
+  if (Request failed / model offline?) then (yes)
+    :Show error / retry hint;
+    stop
+  else (no)
+  endif
+  if (Model requests a tool call?) then (yes)
+    :Execute tool (getEvents / getEventInfo /\ngetRegistrationStatus / getEvaluationStats ...);
+    :Append tool result to conversation;
+  else (no)
+    :Render assistant text reply;
+  endif
+repeat while (Another tool call?) is (yes) not (no)
+:Persist chat_message to channel;
+stop
+@enduml

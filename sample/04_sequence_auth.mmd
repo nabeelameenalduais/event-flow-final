@@ -1,0 +1,89 @@
+---
+title: EventFlow — Authentication (Login & Session Restore) Sequence
+---
+%% Evidence: src/services/authService.ts (login:256, register:279, restoreSession:295, revokeSession:304,
+%% requestPasswordReset:331, resetPasswordWithToken:338), src/services/rateLimit.ts (30 req/min),
+%% src/contexts/AuthContext.tsx (SESSION_KEY "eventflow_session"), src/services/deviceSessionService.ts
+%% (createDeviceSession), supabase/schema.sql RPCs (authenticate_user:195, register_user:337,
+%% get_session_user:388, revoke_session:448). Custom auth: users table + password_hash, NOT Supabase Auth.
+
+sequenceDiagram
+    autonumber
+
+    actor Attendee
+    participant Login as Login Page
+    participant Ctx as AuthContext
+    participant Svc as authService
+    participant RL as rateLimit
+    participant DB as Supabase
+    participant Ses as deviceSessionService
+    participant Aud as auditService
+
+    Attendee->>Login: submit email + password
+    Login->>Ctx: login(email, password)
+    Ctx->>Svc: authService.login(email, password)
+    Svc->>RL: withRateLimit("login:<email>", fn)
+    RL-->>Svc: ok (30 req / 60s, rateLimit.ts)
+    Svc->>DB: rpc("authenticate_user", { p_email, p_password })
+    DB->>DB: count auth_attempts in last 15 min
+    Note over DB: 5 or more: error "Too many attempts"
+    DB->>DB: load user by email (missing: record attempt and error)
+    DB->>DB: verify password (bcrypt crypt or sha256 digest)
+    Note over DB: mismatch: record attempt, error "Invalid email or password"
+    DB->>DB: check suspended flag
+    Note over DB: suspended: error "Account is suspended"
+    DB->>DB: clear auth_attempts for email then load profile and role
+    DB-->>Svc: { user, profile, role }
+    Note over DB: password_hash never returned (RLS + SECURITY DEFINER)
+    Svc->>Aud: logAction(user.id, "login", ...)
+    Note over Aud: fire-and-forget (authService.ts:265)
+    Svc-->>Ctx: AuthResult { user, profile, role }
+    Ctx->>Ses: createDeviceSession(user.id)
+    Note over Ses: generateSessionToken() = crypto.randomUUID()
+    Ses->>DB: insert device_sessions (user_id, token, device_name, ip)
+    DB-->>Ses: device_session (with token)
+    Ses-->>Ctx: session.token
+    Ctx->>Ctx: localStorage.setItem("eventflow_session", token)
+    Note over Ctx: AuthContext.tsx:6
+    Ctx-->>Login: authenticated (isAuthenticated=true)
+    Login-->>Attendee: redirect to /dashboard
+
+    Note over Ctx,DB: --- Session restore on app boot ---
+    Ctx->>Ctx: read token from localStorage ("eventflow_session")
+    Ctx->>Svc: authService.restoreSession(token)
+    Svc->>DB: rpc("get_session_user", { p_token })
+    DB->>DB: find device_sessions by token then update last_active_at
+    DB->>DB: check suspended then load profile and role
+    DB-->>Svc: { user, profile, role, device_session_id }
+    Svc-->>Ctx: AuthResult
+    Ctx->>Ctx: setState(user, profile, role, isAuthenticated=true)
+    alt invalid / expired / suspended
+        Svc-->>Ctx: error "Session expired"
+        Ctx->>Ctx: localStorage.removeItem("eventflow_session")
+        Note over Ctx: AuthContext.tsx:49
+    end
+
+    Note over Ctx,DB: --- Logout ---
+    Attendee->>Ctx: logout()
+    Ctx->>Svc: authService.revokeSession(token)
+    Svc->>DB: rpc("revoke_session", { p_token })
+    Note over DB: delete from device_sessions where token
+    DB-->>Svc: boolean
+    Ctx->>Ctx: localStorage.removeItem("eventflow_session")
+    Ctx-->>Attendee: logged out (isAuthenticated=false)
+
+    Note over Attendee,DB: --- Registration (parallel auth path) ---
+    Attendee->>Login: submit name + email + password
+    Login->>Ctx: register(email, password, firstName, lastName)
+    Ctx->>Svc: authService.register(...)
+    Svc->>RL: withRateLimit("register:<email>", fn)
+    RL-->>Svc: ok
+    Svc->>DB: rpc("register_user", { p_email, p_password, p_first_name, p_last_name })
+    DB->>DB: reject if email exists then hash password (bcrypt, gen_salt bf 10)
+    DB->>DB: insert users and profiles (role = attendee) in one transaction
+    DB-->>Svc: { user, profile, role }
+    Svc-->>Ctx: AuthResult
+    Ctx->>Ses: createDeviceSession(user.id)
+    Note over Ses: same session creation as login
+    Ctx->>Ctx: localStorage.setItem("eventflow_session", token)
+    Ctx-->>Attendee: authenticated as attendee

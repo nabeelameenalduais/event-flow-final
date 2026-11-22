@@ -1,0 +1,70 @@
+---
+title: EventFlow — الهندسة المعمارية للنظام (Layered / Client-First on Supabase)
+---
+%% Source: package.json, src/**, supabase/schema.sql, supabase/functions/chatbot.
+%% البنية: SPA بلا خادم تطبيقات؛ طبقة الخدمات (Repository) تتصل مباشرة بـ Supabase
+%% عبر anon key + RLS + RPCs SECURITY DEFINER. التطبيقات: React 19 + TS + Vite.
+
+flowchart TB
+    subgraph Client["طبقة العرض — المتصفح (React 19 + TypeScript + Vite + Tailwind)"]
+        PAGES["الصفحات (src/pages)<br/>الفعاليات / لوحات التحكم / التذاكر / الدردشة / الإعدادات"]
+        CONTEXTS["السياقات (src/contexts)<br/>AuthContext (eventflow_session) | ThemeContext"]
+        GUARDS["حماية المسارات (src/routes)<br/>ProtectedRoute (RBAC roles) | PublicRoute"]
+        CHAT_UI["واجهة المساعد (src/components/chat)<br/>useChat + (fallback LM Studio)"]
+        QR["QR Code<br/>qrcode | html5-qrcode"]
+    end
+
+    subgraph ServiceLayer["طبقة الخدمات — نمط Repository (src/services)"]
+        AUTH["authService | deviceSessionService<br/>sessionService"]
+        DOMAIN["eventService | registration | ticket<br/>attendance | invitation | evaluation"]
+        SUPPORT["chatService | notification | feedback<br/>cost | category | venue | file | settings"]
+        MISC["userService | organizerService | dashboard<br/>reports | auditService"]
+        UTIL["rateLimit (30/60s)<br/>supabaseErrors (PGRST202/205)"]
+    end
+
+    subgraph Backend["الواجهة الخلفية — Supabase"]
+        PG["PostgreSQL (schema.sql)<br/>30 جدول + قيود + فهارس + RLS"]
+        RPC["RPCs SECURITY DEFINER<br/>authenticate/register/get_session_user<br/>reset_password | submit_evaluation<br/>list/revoke sessions | audit"]
+        RT["Realtime (Postgres CDC)<br/>chat_channels + chat_messages"]
+        STG["Storage (صور/ملفات)<br/>event covers, avatars, attachments"]
+        EF["Edge Functions (Deno)<br/>chatbot/index.ts"]
+    end
+
+    subgraph External["أنظمة خارجية"]
+        OR["OpenRouter<br/>meta-llama/llama-3.2-3b-instruct:free"]
+        EMAIL["البريد/الإشعارات<br/>(قوالب email_templates)"]
+        CAM["كاميرا الجهاز<br/>(فحص QR)"]
+        LMS["LM Studio (محلي — نسخة الاستوديو)"]
+    end
+
+    PAGES --> CONTEXTS
+    PAGES --> GUARDS
+    PAGES --> CHAT_UI
+    GUARDS --> CONTEXTS
+    PAGES --> ServiceLayer
+    CONTEXTS --> ServiceLayer
+    CHAT_UI -->|"POST /lmstudio/v1/chat/completions (وهو المستخدم فعلياً)"| LMS
+    CHAT_UI -.غير مستخدم في الواجهة الحالية.-> EF
+    QR --> CAM
+
+    AUTH --> UTIL
+    DOMAIN --> AUTH
+    SUPPORT --> DOMAIN
+    MISC --> DOMAIN
+
+    ServiceLayer -->|"HTTPS + anon key + JWT-less token<br/>(session token في header)"| PG
+    ServiceLayer -->|"rpc(...)"| RPC
+    ServiceLayer -->|"subscribe / broadcast"| RT
+    ServiceLayer -->|"upload/download"| STG
+    EF -->|"service-role key (خادم فقط)"| PG
+    EF -->|"HTTP POST chat/completions"| OR
+    PAGES -->|"fetch"| EF
+
+    classDef client fill:#e7f0ff,stroke:#1f3864
+    classDef svc fill:#eaf7ea,stroke:#1e7145
+    classDef be fill:#fff3e0,stroke:#b26a00
+    classDef ext fill:#f3e8ff,stroke:#6a3ab2
+    class PAGES,CONTEXTS,GUARDS,CHAT_UI,QR client
+    class AUTH,DOMAIN,SUPPORT,MISC,UTIL svc
+    class PG,RPC,RT,STG,EF be
+    class OR,EMAIL,CAM,LMS ext

@@ -1,0 +1,75 @@
+---
+title: EventFlow - آلة الحالات (State Machine) للكيان الرئيسي
+---
+%% المصدر: src/services/eventService.ts (registerForEvent, cancelRegistration,
+%%          updateEventStatus), src/services/attendanceService.ts (checkIn),
+%%          src/services/ticketService.ts, src/services/authService.ts
+%% ملاحظات واقعية:
+%%   - النظام لا يكتب حالة "pending" إطلاقاً؛ التسجيل يبدأ مباشرةً بـ
+%%     confirmed أو waitlisted (حسب السعة)، ثم cancelled.
+%%   - ترقية waitlisted -> confirmed تتم عبر الكيلنت (cancelRegistration)
+%%     ومرافقة بـ إصدار تذكرة، بالإضافة لـ trigger في القاعدة.
+
+stateDiagram-v2
+    direction LR
+
+    Reg_confirmed : تسجيل مؤكّد
+    Reg_waitlisted : تسجيل في قائمة الانتظار
+    Reg_cancelled : تسجيل ملغى
+    T_valid : تذكرة صالحة (تُصدر عند التأكيد)
+    T_used : تذكرة مستخدمة
+    T_invalid : تذكرة غير صالحة
+    Att_None : حضور - لم يُسجل بعد
+    Att_In : حضور داخل
+    Att_Out : حضور خارج
+    Ev_draft : فعالية مسودة
+    Ev_published : فعالية منشورة
+    Ev_archived : فعالية مؤرشفة
+    Se_active : جلسة نشطة
+    Se_revoked : جلسة ملغاة
+    Eval_submitted : تقييم مقدم
+    Inv_unused : دعوة غير مستخدمة
+    Inv_used : دعوة مستخدمة
+
+    [*] --> Reg_confirmed : "سعة متاحة"
+    [*] --> Reg_waitlisted : "السعة ممتلئة"
+    Reg_confirmed --> Reg_cancelled : "إلغاء التسجيل"
+    Reg_waitlisted --> Reg_confirmed : "ترقية (عند إلغاء مؤكد / trigger)"
+    Reg_waitlisted --> Reg_cancelled : "إلغاء التسجيل"
+    Reg_cancelled --> [*]
+
+    [*] --> T_valid
+    T_valid --> T_used : "checkIn / markAutoAttendance"
+    T_valid --> T_invalid : "إلغاء يدوي (تنظيمي)"
+
+    [*] --> Att_None
+    Att_None --> Att_In : "checkIn / حضور تلقائي (idempotent)"
+    Att_In --> Att_Out : "checkOut"
+
+    [*] --> Ev_draft
+    Ev_draft --> Ev_published : "نشر الفعالية"
+    Ev_published --> Ev_draft : "إرجاع إلى مسودة (unpublish)"
+    Ev_published --> Ev_archived : "أرشفة"
+    Ev_archived --> Ev_published : "إعادة نشر"
+
+    [*] --> Se_active
+    Se_active --> Se_revoked : "logout : revoke_session"
+    Se_active --> Se_revoked : "إلغاء جلسة من جهة أخرى (revoke_session_by_id)"
+    Se_active --> Se_revoked : "حذف الجلسات القديمة"
+
+    [*] --> Eval_submitted
+
+    [*] --> Inv_unused
+    Inv_unused --> Inv_used : "markLinkAsUsed (تسجيل بحضور بدعوة)"
+
+    note right of Reg_confirmed
+        التسجيل:
+        - يُدخل confirmed إذا وُجد مقعد، أو waitlisted إذا امتلأت السعة.
+        - عند إلغاء confirmed تُحرَّر سعة ويُرقّى أول عنصر في الانتظار
+          (مع إصدار تذكرة له) عبر cancelRegistration أو trigger.
+    end note
+
+    note left of Ev_draft
+        الفعالية: لا يمكن لأي مستخدم عادي رؤية فعالية غير منشورة أو خاصة،
+        لذلك لا تظهر في مسار المستخدم العادي حالة "غير منشورة".
+    end note

@@ -1,0 +1,75 @@
+- generic [ref=f11e178]:
+  - complementary [ref=f11e179]:
+    - link "EventFlow" [ref=f11e181] [cursor=pointer]:
+      - /url: /dashboard
+    - navigation [ref=f11e183]:
+      - link "Dashboard" [ref=f11e184] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Browse Events" [ref=f11e190] [cursor=pointer]:
+        - /url: /events
+      - link "Event Requests" [ref=f11e193] [cursor=pointer]:
+        - /url: /dashboard/event-requests
+      - link "My Events" [ref=f11e196] [cursor=pointer]:
+        - /url: /dashboard/events
+      - link "Bans" [ref=f11e200] [cursor=pointer]:
+        - /url: /dashboard/bans
+      - link "Finance" [ref=f11e204] [cursor=pointer]:
+        - /url: /dashboard/finance
+      - link "Audience" [ref=f11e208] [cursor=pointer]:
+        - /url: /dashboard/audience
+      - link "Campaigns" [ref=f11e214] [cursor=pointer]:
+        - /url: /dashboard/campaigns
+      - link "Users" [ref=f11e218] [cursor=pointer]:
+        - /url: /dashboard/admin/users
+      - link "Categories" [ref=f11e231] [cursor=pointer]:
+        - /url: /dashboard/admin/categories
+      - link "Venues" [ref=f11e236] [cursor=pointer]:
+        - /url: /dashboard/admin/venues
+      - link "Files" [ref=f11e241] [cursor=pointer]:
+        - /url: /dashboard/admin/files
+      - link "Reports" [ref=f11e246] [cursor=pointer]:
+        - /url: /dashboard/admin/reports
+      - link "Broadcast" [ref=f11e249] [cursor=pointer]:
+        - /url: /dashboard/admin/broadcast
+      - link "Password Resets" [ref=f11e253] [cursor=pointer]:
+        - /url: /dashboard/admin/password-resets
+      - link "Settings" [ref=f11e257] [cursor=pointer]:
+        - /url: /dashboard/admin/settings
+      - link "Security" [ref=f11e261] [cursor=pointer]:
+        - /url: /dashboard/admin/security
+  - generic [ref=f11e264]:
+    - banner [ref=f11e265]:
+      - generic [ref=f11e267]:
+        - button "Language" [ref=f11e268]:
+          - generic [ref=f11e272]: English
+        - button "Toggle theme" [ref=f11e273]
+        - button "Notifications" [ref=f11e276]
+        - button "AA Alice Admin admin" [ref=f11e280]:
+          - generic [ref=f11e281]: AA
+          - generic [ref=f11e283]:
+            - paragraph [ref=f11e284]: Alice Admin
+            - paragraph [ref=f11e285]: admin
+    - main [ref=f11e288]:
+      - paragraph [ref=f11e291]: Loading dashboard...
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "EventFlow Assistant" [level=3]
+          - paragraph: Ask about events, venues & more
+      - generic:
+        - button
+    - generic:
+      - generic:
+        - paragraph: Hi there!
+        - paragraph: I can help you discover events, check venues, explore categories, and more. What would you like to know?
+    - generic:
+      - button "Upcoming events"
+      - button "Find by category"
+      - button "Available venues"
+      - button "Get tickets"
+    - generic:
+      - textbox "Ask about events, venues, categories..."
+      - button [disabled]
+  - button "Chat with EventFlow Assistant" [ref=f11e292]

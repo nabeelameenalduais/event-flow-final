@@ -1,0 +1,139 @@
+flowchart TB
+
+%% ==================================================================
+%% EventFlow - Use Case Diagram (English) - matched 1:1 with the code
+%% Layout: sample-template (portrait), actors + use cases per group.
+%% ==================================================================
+%% Evidence:
+%%   routes/index.tsx            -> every page + role guard
+%%   eventService.ts             -> registerForEvent (confirm/waitlist, invite
+%%                                  checks), cancelRegistration (waitlist
+%%                                  promotion), publish/archive/draft,
+%%                                  duplicate/delete, setMeetingLink
+%%   attendanceService.ts        -> checkIn / checkOut / findTicketByCode /
+%%                                  markAutoAttendance
+%%   invitationService.ts        -> createLink(s), getLinkByCode, markLinkAsUsed
+%%   evaluationService.ts        -> build evaluations + submitEvaluation
+%%   feedbackService.ts          -> submitFeedback / list / respond
+%%   chatService.ts + useChat.ts -> community & private 1:1 chat, AI assistant
+%%                                  (LM Studio + 6 data tools)
+
+classDef actor  fill:#e8eef7,stroke:#455a64,stroke-width:2.2;
+classDef uc     fill:#f4f8ff,stroke:#0b3d91,stroke-width:1.6;
+classDef syst   fill:#fdf3e3,stroke:#b7791f,stroke-width:1.4,stroke-dasharray:6 4;
+classDef extern fill:#fdecea,stroke:#b91c1c,stroke-width:1.8;
+classDef note   fill:#fff9e6,stroke:#d9a441,stroke-width:1.2;
+
+subgraph System["EventFlow System - system boundary"]
+    subgraph VisitorCases["Visitor (unauthenticated)"]
+        Visitor(["Visitor"])
+        UC01["Browse & search<br/>published events"]
+        UC02["View event detail,<br/>schedule & reviews"]
+        UC03["Register a<br/>new account"]
+        UC04["Log in with<br/>email + password"]
+        UC05["Forgot /<br/>reset password"]
+    end
+
+    subgraph AttendeeCases["Attendee (role: attendee)"]
+        Attendee(["Attendee"])
+        UC06["Register for public event<br/>(auto ticket / waitlist)"]
+        UC07["Register for private event<br/>with invitation code"]
+        UC08["View / download<br/>QR ticket"]
+        UC09["Cancel own registration<br/>(may auto-promote waitlist)"]
+        UC10["Submit feedback<br/>(rating + comment)"]
+        UC11["Submit event<br/>evaluation (questions)"]
+        UC12["Chat: community<br/>or private 1:1"]
+        UC13["Ask the AI assistant<br/>(global widget, LM Studio)"]
+        UC14["View notifications<br/>& reminders"]
+        UC15["Join online meeting<br/>(auto check-in)"]
+    end
+
+    subgraph OrganizerCases["Organizer (event manager)"]
+        Organizer(["Organizer"])
+        UC16["Create / edit / duplicate /<br/>delete event"]
+        UC17["Manage lifecycle:<br/>draft / publish / archive"]
+        UC18["Manage schedule:<br/>sessions & speakers"]
+        UC19["Manage registrations<br/>& waitlist"]
+        UC20["QR check-in /<br/>check-out attendees"]
+        UC21["Generate & share<br/>invitation links"]
+        UC22["Manage event costs<br/>(planned / actual)"]
+        UC23["Build evaluations &<br/>invite attendees"]
+        UC24["Review & respond<br/>to feedback"]
+        UC25["Set online<br/>meeting link"]
+    end
+
+    subgraph AdminCases["Administrator (platform)"]
+        Admin(["Administrator"])
+        UC26["Manage users,<br/>roles & suspension"]
+        UC27["Manage<br/>categories"]
+        UC28["Manage<br/>venues"]
+        UC29["Manage<br/>global files"]
+        UC30["Assign & manage<br/>event organizers"]
+        UC31["View reports<br/>& analytics"]
+        UC32["Configure settings<br/>& email templates"]
+        UC33["Security center: sessions<br/>+ audit log"]
+        UC34["Manage all events<br/>(flag: manage-all)"]
+    end
+end
+
+LM(["LM Studio - external AI model<br/>connects to UC13:<br/>6 tools (search / details /<br/>categories / venues / stats)"])
+
+LEG["Legend<br/>solid line = actor association<br/>Admin inherits every Organizer use case (UC16-UC25)"]
+
+%% ===== Visitor =====
+Visitor --> UC01
+Visitor --> UC02
+Visitor --> UC03
+Visitor --> UC04
+Visitor --> UC05
+
+%% ===== Attendee =====
+Attendee --> UC06
+Attendee --> UC07
+Attendee --> UC08
+Attendee --> UC09
+Attendee --> UC10
+Attendee --> UC11
+Attendee --> UC12
+Attendee --> UC13
+Attendee --> UC14
+Attendee --> UC15
+
+%% ===== Organizer =====
+Organizer --> UC16
+Organizer --> UC17
+Organizer --> UC18
+Organizer --> UC19
+Organizer --> UC20
+Organizer --> UC21
+Organizer --> UC22
+Organizer --> UC23
+Organizer --> UC24
+Organizer --> UC25
+
+%% ===== Administrator (own + inherited organizer rights) =====
+Admin --> UC26
+Admin --> UC27
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+Admin --> UC31
+Admin --> UC32
+Admin --> UC33
+Admin --> UC34
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+Admin --> UC19
+Admin --> UC20
+Admin --> UC21
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC25
+
+%% ===== Colors =====
+class Visitor,Attendee,Organizer,Admin actor;
+class UC01,UC02,UC03,UC04,UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC12,UC13,UC14,UC15,UC16,UC17,UC18,UC19,UC20,UC21,UC22,UC23,UC24,UC25,UC26,UC27,UC28,UC29,UC30,UC31,UC32,UC33,UC34 uc;
+class LM extern;
+class LEG note;

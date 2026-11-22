@@ -1,0 +1,70 @@
+flowchart TD
+
+%% ==================================================================
+%% EventFlow - QR ticket check-in activity
+%% Matched to src/pages/AttendanceManagement.tsx and
+%% src/services/attendanceService.ts (checkIn, checkOut, findTicketByCode,
+%% getAttendanceByTicket). Only confirmed registrations can check in.
+%% Every decision node states its condition and its possible outcomes.
+%% ==================================================================
+
+classDef step   fill:#eef4ff,stroke:#0b3d91,stroke-width:1.5;
+classDef dec    fill:#fff8e6,stroke:#b7791f,stroke-width:1.5;
+classDef err    fill:#fdecea,stroke:#b91c1c,stroke-width:1.5,stroke-dasharray:5 3;
+classDef ok     fill:#e6f7ee,stroke:#1a7f37,stroke-width:1.5;
+classDef note   fill:#fff9e6,stroke:#d9a441,stroke-width:1.2,stroke-dasharray:4 3;
+
+    ST([Organizer opens<br/>Attendance Management]) --> GUARD{Is the organizer<br/>the event owner?<br/>or an administrator?}
+    GUARD -->|No| REDIR([Redirect to the<br/>organizer dashboard])
+    GUARD -->|Yes| LOAD[Load the event and its registrations<br/>keep only confirmed registrations<br/>load tickets and attendance records]
+
+    LOAD --> INPUT{How is the attendee<br/>identified?}
+    INPUT -->|"Type the ticket code"| TYPEIN[Enter the unique code]
+    INPUT -->|"Scan the QR code"| SCAN[Scan with the camera<br/>or enter the code manually]
+    TYPEIN --> LOOKUP[Search for the ticket by code<br/>case-insensitive match]
+    SCAN --> LOOKUP
+    LOOKUP --> FOUND{Ticket found and its<br/>registration confirmed?}
+
+    FOUND -->|No| NOTFOUND([Toast: no ticket found<br/>with that code])
+    FOUND -->|Yes| GETATT[Read the attendance record<br/>for this ticket, if any]
+
+    GETATT --> DECIDE{Does an attendance<br/>record already exist?}
+    DECIDE -->|no record yet| DCHECKIN[Ask the organizer:<br/>Check In the attendee?]
+    DECIDE -->|"record, no check-out time"| DCHECKOUT[Ask the organizer:<br/>Check Out the attendee?]
+    DECIDE -->|"record with a check-out time"| ALREADY([Dialog: already processed,<br/>informational only])
+
+    DCHECKIN --> CONFIRM_IN{Does the organizer<br/>confirm the check-in?}
+    CONFIRM_IN -->|Cancel| INPUT
+    CONFIRM_IN -->|Confirm| TICKET_STATE{Was the ticket<br/>already used?}
+
+    TICKET_STATE -->|used| USED_ERR([Toast: the ticket was<br/>already checked in])
+    TICKET_STATE -->|valid| REG_CONF{Is the registration<br/>status confirmed?}
+    REG_CONF -->|No| NOTCONF([Toast: registration not confirmed,<br/>cannot check in])
+    REG_CONF -->|Yes| UPDATE_TICKET[Mark the ticket as used<br/>for this attendee]
+    UPDATE_TICKET --> INSERT_ATT[Record the attendance entry<br/>with the check-in time]
+    INSERT_ATT --> REFRESH[Refresh the list]
+
+    DCHECKOUT --> CONFIRM_OUT{Does the organizer<br/>confirm the check-out?}
+    CONFIRM_OUT -->|Cancel| INPUT
+    CONFIRM_OUT -->|Confirm| UPDATE_OUT[Add the check-out time<br/>to the existing record]
+    UPDATE_OUT --> REFRESH
+
+    REFRESH --> INPUT
+
+    LOAD --> TABLE[Show the table: attendee, ticket code,<br/>check-in / check-out status]
+    TABLE --> ROW_BTN{Row state}
+    ROW_BTN -->|no attendance record| ROW_IN[Offer: Check In<br/>subject to the same validation]
+    ROW_BTN -->|attendance, no check-out| ROW_OUT[Offer: Check Out]
+    ROW_IN --> TICKET_STATE
+    ROW_OUT --> UPDATE_OUT
+
+    NOTFOUND --> INPUT
+    ALREADY --> INPUT
+
+    NOTE1["Notes:<br/>1) Only confirmed registrations appear in this list - waitlisted and<br/>pending registrations are never shown, so they can never be checked in.<br/>2) A check-in is rejected when the ticket is already used or the<br/>registration is not confirmed; in that case nothing is recorded.<br/>3) Online events: opening the meeting link records attendance<br/>automatically (idempotent) - a separate automatic path."]
+
+    class ST,LOAD,TYPEIN,SCAN,LOOKUP,FOUND,GETATT,UPDATE_TICKET,INSERT_ATT,UPDATE_OUT,REFRESH,TABLE,REDIR step;
+    class GUARD,INPUT,DECIDE,CONFIRM_IN,TICKET_STATE,REG_CONF,CONFIRM_OUT,ROW_BTN dec;
+    class NOTFOUND,USED_ERR,NOTCONF,ALREADY err;
+    class DCHECKIN,DCHECKOUT ok;
+    class NOTE1 note;

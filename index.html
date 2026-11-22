@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EventFlow — a smart web platform for creating, managing, and evaluating events: registrations, tickets, attendance, schedules, invitations, live chat, costs, and reports." />
+    <meta name="theme-color" content="#0d9488" />
+    <title>EventFlow — Event Management System</title>
+    <script>
+      (function () {
+        var language = "ar";
+        try {
+          if (localStorage.getItem("eventflow.language") === "en") language = "en";
+        } catch (error) {}
+        document.documentElement.lang = language;
+        document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+        if (language === "ar") {
+          var description = document.querySelector('meta[name="description"]');
+          if (description) {
+            description.setAttribute("content", "EventFlow — منصة ويب ذكية لإنشاء الفعاليات وإدارتها وتقييمها: التسجيلات، التذاكر، الحضور، الجداول، الدعوات، المحادثة المباشرة، التكاليف، والتقارير.");
+          }
+          document.title = "EventFlow — نظام إدارة الفعاليات";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,308 @@
+@startuml
+title EventFlow - Entity Relationship Diagram (Academic, crow's foot)
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+
+package "Identity & Access" {
+  entity users {
+    * id : uuid <<PK>>
+    email : text
+    encrypted_password : text
+    created_at : timestamp
+    updated_at : timestamp
+    suspended : boolean
+  }
+  entity roles {
+    * id : uuid <<PK>>
+    name : text
+    description : text
+  }
+  entity profiles {
+    * id : uuid <<PK, FK users>>
+    user_id : uuid <<FK users>>
+    first_name : text
+    last_name : text
+    phone_number : text
+    avatar_url : text
+    role_id : uuid <<FK roles>>
+    manages_all_events : boolean
+  }
+  entity device_sessions {
+    * id : uuid <<PK>>
+    user_id : uuid <<FK users>>
+    device_name : text
+    ip_address : text
+    token : text
+    is_current : boolean
+    last_active_at : timestamp
+    created_at : timestamp
+  }
+  entity auth_attempts {
+    * id : uuid <<PK>>
+    identifier : text
+    ip_address : text
+    attempted_at : timestamp
+    success : boolean
+  }
+  entity password_reset_tokens {
+    * id : uuid <<PK>>
+    user_id : uuid <<FK users>>
+    token : text <<UQ>>
+    expires_at : timestamp
+    created_at : timestamp
+  }
+  entity audit_logs {
+    * id : uuid <<PK>>
+    user_id : uuid <<FK users, NULL>>
+    action : text
+    entity_type : text
+    entity_id : text
+    details : text
+    ip_address : text
+    created_at : timestamp
+  }
+}
+
+package "Catalog" {
+  entity categories {
+    * id : uuid <<PK>>
+    name : text
+    description : text
+    icon_url : text
+    color_code : text
+    deleted_at : timestamp
+  }
+  entity venues {
+    * id : uuid <<PK>>
+    name : text
+    address : text
+    capacity : int
+    facilities : jsonb
+    image_urls : text[]
+    deleted_at : timestamp
+  }
+  entity events {
+    * id : uuid <<PK>>
+    title : text
+    description : text
+    cover_image_url : text
+    organizer_id : uuid <<FK users>>
+    venue_id : uuid <<FK venues>>
+    capacity : int
+    registration_deadline : timestamp
+    start_date : timestamp
+    end_date : timestamp
+    status : text
+    visibility : text
+    contact_email : text
+    category_id : uuid <<FK categories>>
+    event_type : text
+    meeting_link : text
+    meeting_link_generated_by : uuid <<FK users>>
+    meeting_link_created_at : timestamp
+    deleted_at : timestamp
+  }
+  entity event_organizers {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    user_id : uuid <<FK users>>
+    is_primary : boolean
+    created_at : timestamp
+    "UQ (event_id, user_id)"
+  }
+  entity sessions {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    title : text
+    description : text
+    start_time : timestamp
+    end_time : timestamp
+    room_name : text
+  }
+  entity speakers {
+    * id : uuid <<PK>>
+    session_id : uuid <<FK sessions>>
+    name : text
+    bio : text
+    image_url : text
+  }
+}
+
+package "Registration & Attendance" {
+  entity registrations {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    attendee_id : uuid <<FK profiles>>
+    registered_at : timestamp
+    status : text
+  }
+  entity tickets {
+    * id : uuid <<PK>>
+    registration_id : uuid <<FK registrations>>
+    unique_code : text
+    qr_code_url : text
+    issued_at : timestamp
+    status : text
+  }
+  entity attendance {
+    * id : uuid <<PK>>
+    ticket_id : uuid <<FK tickets>>
+    check_in_time : timestamp
+    check_out_time : timestamp
+  }
+  entity invitation_links {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    email : text
+    code : text
+    used : boolean
+    used_at : timestamp
+    created_at : timestamp
+  }
+}
+
+package "Engagement & Feedback" {
+  entity notifications {
+    * id : uuid <<PK>>
+    user_id : uuid <<FK users>>
+    type : text
+    message : text
+    read_at : timestamp
+    created_at : timestamp
+    link : text
+  }
+  entity chat_channels {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    channel_type : text
+    organizer_id : uuid <<FK users, NULL>>
+    attendee_id : uuid <<FK profiles, NULL>>
+    created_at : timestamp
+    "partial UQ (event, channel_type)"
+  }
+  entity chat_messages {
+    * id : uuid <<PK>>
+    channel_id : uuid <<FK chat_channels>>
+    sender_id : uuid <<FK users>>
+    content : text
+    created_at : timestamp
+  }
+  entity evaluations {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    title : text
+    rating_type : text
+    privacy : text
+    created_by : uuid <<FK users>>
+    created_at : timestamp
+  }
+  entity evaluation_questions {
+    * id : uuid <<PK>>
+    evaluation_id : uuid <<FK evaluations>>
+    question : text
+    question_type : text
+    options : jsonb
+    sort_order : int
+  }
+  entity evaluation_submissions {
+    * id : uuid <<PK>>
+    evaluation_id : uuid <<FK evaluations>>
+    attendee_id : uuid <<FK profiles>>
+    rating : int
+    is_public : boolean
+    created_at : timestamp
+    "UQ (evaluation_id, attendee_id)"
+  }
+  entity evaluation_answers {
+    * id : uuid <<PK>>
+    submission_id : uuid <<FK evaluation_submissions>>
+    question_id : uuid <<FK evaluation_questions>>
+    answer : text
+    "UQ (submission_id, question_id)"
+  }
+  entity feedback {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    attendee_id : uuid <<FK profiles>>
+    rating : int
+    comment : text
+    submitted_at : timestamp
+    response : text
+    responded_at : timestamp
+  }
+  entity event_costs {
+    * id : uuid <<PK>>
+    event_id : uuid <<FK events>>
+    cost_type : text
+    item : text
+    need_type : text
+    quantity : int
+    unit_price : numeric
+    notes : text
+    created_by : uuid <<FK users>>
+    updated_by : uuid <<FK users>>
+    created_at : timestamp
+    updated_at : timestamp
+  }
+}
+
+package "Admin & Ops" {
+  entity files {
+    * id : uuid <<PK>>
+    name : text
+    url : text
+    type : text
+    size : int
+    uploaded_by : uuid <<FK users>>
+    created_at : timestamp
+  }
+  entity email_templates {
+    * id : uuid <<PK>>
+    type : text
+    subject : text
+    body : text
+  }
+  entity app_settings {
+    * id : uuid <<PK>>
+    app_name : text
+    timezone : text
+    date_format : text
+    primary_color : text
+    logo_url : text
+    favicon_url : text
+  }
+}
+
+' --- Relations ---
+users ||--|| profiles : "1:1 user_id"
+users ||--o{ device_sessions : "owns"
+users ||--o{ audit_logs : "acts"
+users ||--o{ notifications : "receives"
+users ||--o{ chat_messages : "sends"
+users ||--o{ password_reset_tokens : "requests"
+profiles }o..|| roles : "role_id"
+users ||--o{ events : "primary organizer"
+users }o--o{ events : "organizers (event_organizers)"
+event_organizers }o--|| events : "event_id"
+event_organizers }o--|| users : "user_id"
+categories ||--o{ events : "category_id"
+venues ||--o{ events : "venue_id"
+events ||--o{ sessions : "sessions"
+sessions ||--o{ speakers : "speakers"
+events ||--o{ invitation_links : "invites"
+events ||--o{ registrations : "has"
+registrations }o--|| profiles : "attendee_id"
+registrations ||..o{ tickets : "1:1"
+tickets ||--o| attendance : "1:1"
+events ||--o{ chat_channels : "chats"
+chat_channels ||--o{ chat_messages : "messages"
+events ||--o{ evaluations : "evaluations"
+evaluations ||--o{ evaluation_questions : "questions"
+evaluations ||--o{ evaluation_submissions : "submissions"
+evaluation_submissions ||--o{ evaluation_answers : "answers"
+evaluation_questions ||--o{ evaluation_answers : "answers"
+events ||--o{ feedback : "feedback"
+events ||--o{ event_costs : "costs"
+users ||--o{ files : "uploads"
+@enduml
