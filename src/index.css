@@ -158,3 +158,48 @@ bdi,
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+@media print {
+  body:has(#reports-root),
+  body:has(#reports-root) #root,
+  body:has(#reports-root) .h-screen,
+  body:has(#reports-root) main {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  body:has(#reports-root) main {
+    padding: 0 !important;
+  }
+
+  body:has(#reports-root) aside,
+  body:has(#reports-root) header,
+  body:has(#reports-root) .no-print,
+  body:has(#reports-root) [class*="fixed bottom-"],
+  body:has(#reports-root) [class*="fixed inset-0"] {
+    display: none !important;
+  }
+
+  body:has(#reports-root) #reports-root {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  body:has(#reports-root) h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  body:has(#reports-root) .recharts-responsive-container,
+  body:has(#reports-root) table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body:has(#reports-root) tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

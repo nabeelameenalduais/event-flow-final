@@ -1,0 +1,360 @@
+---
+title: EventFlow — ERD الأساسي (30 جدولاً)
+config:
+  theme: default
+  look: classic
+  layout: elk
+  deterministicIds: true
+  deterministicIDSeed: eventflow-erd
+  handDrawnSeed: 1
+---
+%% مصدر الحقيقة: supabase/schema.sql + schema-part2-security.sql +
+%% supabase/migrations/2026-11-06_all_additions.sql + الملحق B في التقرير.
+%% النطاق: 30 جدولاً أساسياً فقط. الجداول المساندة السبعة عشر المضافة في
+%% 2026-11-06_all_additions.sql موثقة منفصلة ولا تُعد جزءاً من هذا ERD.
+%% الجداول الأساسية التي لم تُنشأ صراحةً في ملفات SQL موثقة في الملحق B.
+%% كل علاقة أدناه هي قيد FK فعلي، بما يشمل المفتاح الذاتي users.deleted_by
+%% والمفاتيح المضافة بالهجرات (tickets/attendance.verified_by).
+%% AppSettings تُضمّن emailTemplates على مستوى التطبيق (لا FK بينهما).
+%% auth_attempts بلا أي FK (جدول ضبط للمحاولات).
+%% الحقول الحساسة (users.password_hash, device_sessions.token,
+%% password_reset_tokens.*, auth_attempts.*) مغلقة كليًا أمام العميل (RPC فقط).
+
+erDiagram
+    direction TB
+
+    USERS ||--o| PROFILES : "profiles.user_id (UNIQUE, FK)"
+    USERS ||--o{ USERS : "users.deleted_by (FK, SET NULL)"
+    ROLES ||--o{ PROFILES : "profiles.role_id (FK)"
+
+    CATEGORIES ||--o{ EVENTS : "events.category_id (FK)"
+    VENUES ||--o{ EVENTS : "events.venue_id (FK)"
+    PROFILES ||--o{ EVENTS : "events.organizer_id (FK)"
+    USERS ||--o{ EVENTS : "events.meeting_link_generated_by (FK, SET NULL)"
+
+    EVENTS ||--o{ EVENT_IMAGES : "event_images.event_id (FK)"
+    EVENTS ||--o{ SESSIONS : "sessions.event_id (FK)"
+    SESSIONS ||--o{ SPEAKERS : "speakers.session_id (FK)"
+    EVENTS ||--o{ REGISTRATIONS : "registrations.event_id (FK)"
+    PROFILES ||--o{ REGISTRATIONS : "registrations.attendee_id (FK)"
+    REGISTRATIONS ||--o| TICKETS : "tickets.registration_id (UNIQUE, FK)"
+    TICKETS ||--o{ ATTENDANCE : "attendance.ticket_id (FK)"
+    USERS ||--o{ TICKETS : "tickets.verified_by (FK, SET NULL)"
+    USERS ||--o{ ATTENDANCE : "attendance.verified_by (FK, SET NULL)"
+    EVENTS ||--o{ FEEDBACK : "feedback.event_id (FK)"
+    PROFILES ||--o{ FEEDBACK : "feedback.attendee_id (FK)"
+    USERS ||--o{ NOTIFICATIONS : "notifications.user_id (FK)"
+    PROFILES ||--o{ FILES : "files.uploaded_by (FK)"
+    USERS ||--o{ AUDIT_LOGS : "audit_logs.user_id (FK, SET NULL)"
+    EVENTS ||--o{ INVITATION_LINKS : "invitation_links.event_id (FK)"
+    EVENTS ||--o{ EVENT_ORGANIZERS : "event_organizers.event_id (FK)"
+    USERS ||--o{ EVENT_ORGANIZERS : "event_organizers.user_id (FK)"
+    USERS ||--o{ EVENT_ORGANIZERS : "event_organizers.created_by (FK, SET NULL)"
+    EVENTS ||--o{ CHAT_CHANNELS : "chat_channels.event_id (FK)"
+    USERS ||--o{ CHAT_CHANNELS : "chat_channels.organizer_id (FK)"
+    PROFILES ||--o{ CHAT_CHANNELS : "chat_channels.attendee_id (FK)"
+    CHAT_CHANNELS ||--o{ CHAT_MESSAGES : "chat_messages.channel_id (FK)"
+    USERS ||--o{ CHAT_MESSAGES : "chat_messages.sender_id (FK)"
+    EVENTS ||--o{ EVALUATIONS : "evaluations.event_id (FK)"
+    USERS ||--o{ EVALUATIONS : "evaluations.created_by (FK, SET NULL)"
+    EVALUATIONS ||--o{ EVALUATION_QUESTIONS : "evaluation_questions.evaluation_id (FK)"
+    EVALUATIONS ||--o{ EVALUATION_SUBMISSIONS : "evaluation_submissions.evaluation_id (FK)"
+    PROFILES ||--o{ EVALUATION_SUBMISSIONS : "evaluation_submissions.attendee_id (FK)"
+    EVALUATION_SUBMISSIONS ||--o{ EVALUATION_ANSWERS : "evaluation_answers.submission_id (FK)"
+    EVALUATION_QUESTIONS ||--o{ EVALUATION_ANSWERS : "evaluation_answers.question_id (FK)"
+    EVENTS ||--o{ EVENT_COSTS : "event_costs.event_id (FK)"
+    USERS ||--o{ EVENT_COSTS : "event_costs.created_by (FK, SET NULL)"
+    USERS ||--o{ EVENT_COSTS : "event_costs.updated_by (FK, SET NULL)"
+    USERS ||--o{ DEVICE_SESSIONS : "device_sessions.user_id (FK, CASCADE)"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "password_reset_tokens.user_id (FK, CASCADE)"
+
+    USERS {
+        uuid id PK
+        text email UK
+        text password_hash "مغلق عن العميل (bcrypt + SHA-256 legacy)"
+        timestamptz created_at
+        timestamptz updated_at
+        boolean suspended
+        timestamptz deleted_at
+        timestamptz deletion_requested_at
+        timestamptz scheduled_deletion_at
+        uuid deleted_by FK "SET NULL"
+        text deletion_reason
+        timestamptz recovered_at
+        boolean must_change_password "default false"
+    }
+    ROLES {
+        uuid id PK
+        text name UK "admin | organizer | attendee"
+        text description
+    }
+    PROFILES {
+        uuid id PK
+        uuid user_id FK,UK
+        text first_name
+        text last_name
+        text phone_number
+        text avatar_url
+        uuid role_id FK
+        boolean manages_all_events
+    }
+    CATEGORIES {
+        uuid id PK
+        text name
+        text description
+        text icon_url
+        text color_code
+        timestamptz deleted_at "حذف منطقي"
+    }
+    VENUES {
+        uuid id PK
+        text name
+        text address
+        integer capacity
+        jsonb facilities
+        jsonb image_urls
+        timestamptz deleted_at
+    }
+    EVENTS {
+        uuid id PK
+        text title
+        text description
+        text cover_image_url
+        uuid organizer_id FK
+        uuid venue_id FK "اختياري للفعاليات online/hybrid"
+        integer capacity
+        timestamptz registration_deadline
+        timestamptz start_date
+        timestamptz end_date
+        text status "draft | published | archived"
+        text visibility "public | private"
+        text contact_email
+        uuid category_id FK
+        text event_type "in_person | online | hybrid"
+        text meeting_link "للفعاليات online"
+        uuid meeting_link_generated_by FK "SET NULL"
+        timestamptz meeting_link_created_at
+        integer online_capacity
+        integer in_person_capacity
+        text meeting_provider "default jitsi"
+        integer meeting_attendance_minutes "default 10"
+        text meeting_room_name
+        text hybrid_note
+        timestamptz deleted_at
+    }
+    EVENT_IMAGES {
+        uuid id PK
+        uuid event_id FK
+        text image_url
+        text description
+    }
+    SESSIONS {
+        uuid id PK
+        uuid event_id FK
+        text title
+        text description
+        timestamptz start_time
+        timestamptz end_time
+        text room_name
+    }
+    SPEAKERS {
+        uuid id PK
+        uuid session_id FK
+        text name
+        text bio
+        text image_url
+    }
+    REGISTRATIONS {
+        uuid id PK
+        uuid event_id FK
+        uuid attendee_id FK
+        timestamptz registered_at
+        text status "pending | confirmed | cancelled | waitlisted"
+        text attendance_mode "in_person | online"
+    }
+    TICKETS {
+        uuid id PK
+        uuid registration_id FK,UK
+        text unique_code UK
+        text qr_code_url
+        text qr_payload "encoded ticket payload"
+        timestamptz issued_at
+        text status "valid | used | invalid"
+        text attendance_mode "in_person | online"
+        uuid verified_by FK "SET NULL"
+        timestamptz verified_at
+    }
+    ATTENDANCE {
+        uuid id PK
+        uuid ticket_id FK
+        timestamptz check_in_time
+        timestamptz check_out_time "NULL حتى الخروج"
+        text mode "in_person | online"
+        text source "manual | qr_scan | auto_presence | auto_join"
+        uuid verified_by FK "SET NULL"
+        integer presence_seconds
+    }
+    FEEDBACK {
+        uuid id PK
+        uuid event_id FK
+        uuid attendee_id FK
+        integer rating
+        text comment
+        text response "رد المنظم"
+        timestamptz submitted_at
+        timestamptz responded_at
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        text type "انظر NotificationType"
+        text message
+        timestamptz read_at "NULL = غير مقروء"
+        timestamptz created_at
+        text link "رابط التنقل"
+    }
+    FILES {
+        uuid id PK
+        text name
+        text url
+        text type
+        integer size
+        uuid uploaded_by FK
+        timestamptz created_at
+    }
+    AUDIT_LOGS {
+        uuid id PK
+        uuid user_id FK "SET NULL"
+        text action
+        text entity_type
+        uuid entity_id
+        text details
+        text ip_address
+        timestamptz created_at
+    }
+    INVITATION_LINKS {
+        uuid id PK
+        uuid event_id FK
+        text email
+        text code UK
+        boolean used
+        timestamptz used_at
+        timestamptz created_at
+    }
+    EVENT_ORGANIZERS {
+        uuid id PK
+        uuid event_id FK
+        uuid user_id FK
+        boolean is_primary
+        timestamptz created_at
+        uuid created_by FK "SET NULL"
+        text constraint_uniq "UNIQUE (event_id, user_id)"
+    }
+    CHAT_CHANNELS {
+        uuid id PK
+        uuid event_id FK
+        text channel_type "general | private"
+        uuid organizer_id FK "general => NULL"
+        uuid attendee_id FK "general => NULL"
+        timestamptz created_at
+        text constraint_general_uniq "UNIQUE (event_id) WHEN channel_type='general'"
+        text constraint_private_uniq "UNIQUE (event_id, organizer_id, attendee_id) WHEN private"
+    }
+    CHAT_MESSAGES {
+        uuid id PK
+        uuid channel_id FK
+        uuid sender_id FK
+        text content
+        timestamptz created_at
+    }
+    EVALUATIONS {
+        uuid id PK
+        uuid event_id FK
+        text title
+        text rating_type "numeric | stars"
+        text privacy "secret | public"
+        uuid created_by FK "SET NULL"
+        timestamptz created_at
+    }
+    EVALUATION_QUESTIONS {
+        uuid id PK
+        uuid evaluation_id FK
+        text question
+        text question_type "multiple_choice | text"
+        jsonb options
+        integer sort_order
+    }
+    EVALUATION_SUBMISSIONS {
+        uuid id PK
+        uuid evaluation_id FK
+        uuid attendee_id FK
+        integer rating
+        boolean is_public
+        timestamptz created_at
+        text constraint_uniq "UNIQUE (evaluation_id, attendee_id)"
+    }
+    EVALUATION_ANSWERS {
+        uuid id PK
+        uuid submission_id FK
+        uuid question_id FK
+        text answer
+        text constraint_uniq "UNIQUE (submission_id, question_id)"
+    }
+    EVENT_COSTS {
+        uuid id PK
+        uuid event_id FK
+        text cost_type "planned | actual"
+        text item
+        text need_type
+        numeric quantity
+        numeric unit_price
+        text notes
+        uuid created_by FK "SET NULL"
+        uuid updated_by FK "SET NULL"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    DEVICE_SESSIONS {
+        uuid id PK
+        uuid user_id FK "CASCADE"
+        text device_name
+        text ip_address
+        text token "مغلق عن العميل — RPC فقط"
+        timestamptz last_active_at
+        timestamptz created_at
+    }
+    PASSWORD_RESET_TOKENS {
+        uuid id PK
+        uuid user_id FK "CASCADE"
+        text token UK "مغلق عن العميل — RPC فقط"
+        timestamptz created_at
+        timestamptz expires_at "30 دقيقة"
+        timestamptz used_at "استخدام واحد"
+    }
+    APP_SETTINGS {
+        uuid id PK
+        text app_name
+        text timezone
+        text date_format
+        text primary_color
+        text logo_url
+        text favicon_url
+        timestamptz updated_at
+    }
+    EMAIL_TEMPLATES {
+        uuid id PK
+        text type
+        text subject
+        text body
+    }
+    AUTH_ATTEMPTS {
+        uuid id PK
+        text email
+        timestamptz attempted_at "نافذة 15 دقيقة / حد 5"
+    }
+
+    %% --- ملاحظات الأمان (schema-part2-security.sql) ---
+    %% password_reset_tokens & auth_attempts: REVOKE ALL للعميل.
+    %% users.password_hash: قراءة/تحديث محظوران من العميل.
+    %% device_sessions.token: قراءة/تحديث محظوران من العميل.
+    %% audit_logs: كتابة عبر RPC فقط (سجل حادثات تراكمي).

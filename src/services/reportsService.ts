@@ -4,20 +4,23 @@ import { supabase } from "../lib/supabase"
 export type ReportModeFilter = "all" | "online" | "in_person"
 
 export async function getReportData(modeFilter: ReportModeFilter = "all") {
-  const [events, registrations, categories, feedbacks, users, profiles, venues, tickets, attendance, costs, evaluations] =
-    await Promise.all([
-      supabase.from("events").select("id, title, status, capacity, online_capacity, in_person_capacity, category_id, venue_id, event_type, start_date, end_date").order("start_date"),
-      supabase.from("registrations").select("id, event_id, attendee_id, status, attendance_mode, registered_at"),
-      supabase.from("categories").select("id, name"),
-      supabase.from("feedback").select("id, event_id, rating, submitted_at"),
-      supabase.from("users").select("id, email, suspended, created_at"),
-      supabase.from("profiles").select("id, user_id, first_name, last_name, role_id, role:roles(name)"),
-      supabase.from("venues").select("id, name"),
-      supabase.from("tickets").select("id, registration_id, status"),
-      supabase.from("attendance").select("id, ticket_id, check_in_time, mode"),
-      supabase.from("event_costs").select("event_id, cost_type, need_type, quantity, unit_price"),
-      supabase.from("evaluations").select("id, event_id, rating_type"),
-    ])
+  const results = await Promise.all([
+    supabase.from("events").select("id, title, status, capacity, online_capacity, in_person_capacity, category_id, venue_id, event_type, start_date, end_date").order("start_date"),
+    supabase.from("registrations").select("id, event_id, attendee_id, status, attendance_mode, registered_at"),
+    supabase.from("categories").select("id, name"),
+    supabase.from("feedback").select("id, event_id, rating, submitted_at"),
+    supabase.from("users").select("id, email, suspended, created_at"),
+    supabase.from("profiles").select("id, user_id, first_name, last_name, role_id, role:roles(name)"),
+    supabase.from("venues").select("id, name"),
+    supabase.from("tickets").select("id, registration_id, status"),
+    supabase.from("attendance").select("id, ticket_id, check_in_time, mode"),
+    supabase.from("event_costs").select("event_id, cost_type, need_type, quantity, unit_price"),
+    supabase.from("evaluations").select("id, event_id, rating_type"),
+  ])
+  const failed = results.find((result) => result.error)
+  if (failed?.error) throw new Error(failed.error.message)
+
+  const [events, registrations, categories, feedbacks, users, profiles, venues, tickets, attendance, costs, evaluations] = results
 
   const evs = (events.data ?? []) as any[]
   const allRegs = (registrations.data ?? []) as any[]

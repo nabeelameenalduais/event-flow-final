@@ -1,0 +1,51 @@
+---
+title: EventFlow — نشاط تسجيل الحضور في الفعالية (نشاط شامل)
+---
+%% Source: src/services/eventService.ts (registerForEvent), invitationService,
+%%        ticketService (generateTicket). يغطي: عام/خاص، مقاعد/قائمة انتظار،
+%%        تحقق الدعوة، الترقيّة، والتأكيد النهائي.
+
+flowchart TD
+    Start([بداية: تسجيل في فعالية]) --> LoadEvent[جلب بيانات الفعالية<br/>title, capacity, visibility, status, deadlines]
+    LoadEvent --> CheckOpen{فعالية منشورة؟}
+    CheckOpen -->|لا| ErrClosed[خطأ: «This event is not open for registration»] --> EndErr([إنهاء بفشل])
+
+    CheckOpen -->|نعم| CheckDeadline{قبل انتهاء<br/>موعد التسجيل؟}
+    CheckDeadline -->|لا| ErrDeadline[خطأ: «The registration deadline has passed»] --> EndErr
+    CheckDeadline -->|نعم| CheckEnded{لم تنتهِ الفعالية بعد؟}
+    CheckEnded -->|لا| ErrEnded[خطأ: «This event has already ended»] --> EndErr
+
+    CheckEnded -->|نعم| CheckVis{visibility = public أم private؟}
+
+    CheckVis -- private --> ReqCode{هل أُدخل رمز دعوة؟}
+    ReqCode -->|لا| ErrCode[خطأ: «An invitation code is required»] --> EndErr
+    ReqCode -->|نعم| ValLink["getLinkByCode(code)"]
+    ValLink --> L1{الرابط موجود؟}
+    L1 -->|لا| ErrInv[خطأ: «Invalid invitation link»] --> EndErr
+    L1 -->|نعم| L2{الرابط غير مستخدم؟}
+    L2 -->|لا| ErrUsed[خطأ: «This invitation link has already been used»] --> EndErr
+    L2 -->|نعم| L3{يخص هذه الفعالية؟}
+    L3 -->|لا| ErrWrong[خطأ: «does not belong to this event»] --> EndErr
+    L3 -->|نعم| L4{البريد المُرتبط = بريد الحاضر؟}
+    L4 -->|لا| ErrMail[خطأ: «sent to a different email address»] --> EndErr
+    L4 -->|نعم| CheckDup
+
+    CheckVis -- public --> CheckDup{مسجّل مسبقًا؟}
+    CheckDup -->|نعم| ErrDup[خطأ: «Already registered for this event»] --> EndErr
+
+    CheckDup -->|لا| CountSeats[عدّ المسجّلين confirmed]
+    CountSeats --> Full{count >= capacity؟}
+    Full -->|نعم| Waitlist["INSERT registration<br/>status = waitlisted"] --> NotifWait[إشعار «waitlist»] --> EndWait([إنهاء: قائمة انتظار])
+
+    Full -->|لا| Confirm["INSERT registration<br/>status = confirmed"] --> GenTicket[generateTicket: unique_code + QR]
+    GenTicket --> NotifConf[إشعار «registration_confirmation»]
+    NotifConf --> InvUsed{فعالية خاصة؟}
+    InvUsed -->|نعم| MarkUsed[markLinkAsUsed + إشعار المنظم «invitation_used»]
+    InvUsed -->|لا| Skip
+    MarkUsed --> Skip
+    Skip --> EndOk([إنهاء: تم التسجيل — تذكرة جاهزة])
+
+    EndErr([خطأ معروض للمستخدم]):::fail
+    classDef fail fill:#ffdddd,stroke:#cc0000
+    classDef ok fill:#ddffdd,stroke:#008800
+    class EndWait,EndOk ok

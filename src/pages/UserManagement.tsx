@@ -199,12 +199,12 @@ export function UserManagement() {
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell>
                     <Badge variant={user.roleName === "admin" ? "default" : user.roleName === "organizer" ? "secondary" : "outline"}>
-                      {user.roleName}
+                      {t(user.roleName)}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={user.suspended ? "destructive" : "secondary"}>
-                      {user.suspended ? "Suspended" : t("Active")}
+                      {user.suspended ? t("Suspended") : t("Active")}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">

@@ -83,7 +83,7 @@ export function UserDetail() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="gap-2">
+      <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard/admin/users")} className="gap-2">
         <ArrowLeft size={16} /> {t("Back to Admin")}
       </Button>
 
@@ -98,11 +98,11 @@ export function UserDetail() {
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold">{user.profile?.firstName} {user.profile?.lastName}</h2>
                   <Badge variant={user.suspended ? "destructive" : "secondary"}>
-                    {user.suspended ? "Suspended" : t("Active")}
+                    {user.suspended ? t("Suspended") : t("Active")}
                   </Badge>
                 </div>
                 <Badge variant={user.roleName === "admin" ? "default" : user.roleName === "organizer" ? "secondary" : "outline"} className="mt-1">
-                  {user.roleName}
+                  {t(user.roleName)}
                 </Badge>
               </div>
             </div>
@@ -173,7 +173,7 @@ export function UserDetail() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone size={16} className="text-muted-foreground" />
-                <span>{user.profile?.phoneNumber || "Not provided"}</span>
+                <span>{user.profile?.phoneNumber || t("Not provided")}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Calendar size={16} className="text-muted-foreground" />
@@ -181,7 +181,7 @@ export function UserDetail() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Shield size={16} className="text-muted-foreground" />
-                <span className="capitalize">{user.roleName}</span>
+                <span>{t(user.roleName)}</span>
               </div>
             </>
           )}

@@ -1,0 +1,83 @@
+---
+title: EventFlow — آلة الحالات (State Machine) للنطاقات الحرجة
+---
+%% المصدر: src/services/eventService.ts (registerForEvent, cancelRegistration,
+%%        updateEventStatus), src/services/attendanceService.ts (checkIn),
+%%        src/services/ticketService.ts, src/services/authService.ts،
+%%        schema.sql (notify_waitlist_promotion trigger).
+%% ملاحظة: أسماء مسطحة (prefix لكل كائن نطاق) لتفادي خطأ مُحلل Mermaid 11
+%% في الحالات المركّبة؛ تُعلن كل الحالات قبل الانتقالات والملاحظات.
+
+stateDiagram-v2
+    direction LR
+
+    Reg_pending
+    Reg_confirmed
+    Reg_waitlisted
+    Reg_cancelled
+    T_valid : ticket valid issued on confirmed
+    T_used
+    T_invalid
+    Att_None : attendance - لا سجل حضور
+    Att_In
+    Att_Out
+    Ev_draft : event draft
+    Ev_published
+    Ev_archived
+    Se_active : device session active
+    Se_revoked
+    Eval_submitted : evaluation submitted - مرة واحدة
+    Inv_unused : invitation unused
+    Inv_used
+
+    [*] --> Reg_pending
+    Reg_pending --> Reg_confirmed : "capacity free / إدراج مباشر"
+    Reg_pending --> Reg_waitlisted : "capacity full"
+    Reg_pending --> Reg_cancelled : "إلغاء"
+    Reg_waitlisted --> Reg_confirmed : "ترقية (promotion)"
+    Reg_waitlisted --> Reg_cancelled : "إلغاء"
+    Reg_confirmed --> Reg_cancelled : "إلغاء التسجيل"
+    Reg_cancelled --> [*]
+
+    [*] --> T_valid
+    T_valid --> T_used : "checkIn / markAutoAttendance"
+    T_valid --> T_invalid : "إبطال من المنظم"
+
+    [*] --> Att_None
+    Att_None --> Att_In : "checkIn / auto-attendance idempotent"
+    Att_In --> Att_Out : "checkOut"
+
+    [*] --> Ev_draft
+    Ev_draft --> Ev_published : "نشر updateEventStatus"
+    Ev_published --> Ev_draft : "إلغاء النشر unpublish"
+    Ev_published --> Ev_archived : "أرشفة"
+    Ev_archived --> Ev_published : "إعادة نشر"
+
+    [*] --> Se_active
+    Se_active --> Se_revoked : "logout revoke_session"
+    Se_active --> Se_revoked : "إبطال عن بُعد revoke_session_by_id"
+    Se_active --> Se_revoked : "إعادة تعيين كلمة المرور delete sessions"
+
+    [*] --> Eval_submitted
+
+    [*] --> Inv_unused
+    Inv_unused --> Inv_used : "markLinkAsUsed بعد تسجيل الضيف"
+
+    note right of Reg_pending
+        آلة حالة التسجيل:
+        - الإدراج: confirmed سعة متاحة أو waitlisted امتلاء.
+        - الترقيّة: waitlisted إلى confirmed عبر trigger
+          notify_waitlist_promotion مع إشعار تلقائي.
+        - الإلغاء من confirmed يحرر مقعدًا ويرقي أول
+          قائمة الانتظار حسب registered_at.
+    end note
+
+    note left of Ev_draft
+        القيود: لا يمكن التسجيل في غير published؛
+        الفعاليات غير المنشورة لا تظهر للزوار RLS + استعلام.
+    end note
+
+    note right of Se_active
+        لا انتهاء صلاحية صريح للجلسة في المخطط الحالي؛
+        last_active_at يُحدَّث عبر get_session_user.
+    end note

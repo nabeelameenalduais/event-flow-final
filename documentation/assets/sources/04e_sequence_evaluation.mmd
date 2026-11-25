@@ -1,0 +1,79 @@
+---
+title: EventFlow — تسلسل التقييم (إنشاء استبيان + إرسال بالتحقق الخادمي)
+---
+%% Source: src/services/evaluationService.ts, supabase/schema.sql
+%%        (RPC submit_evaluation يفرض: تسجيل مؤكد + حضور فعلي + مرة واحدة).
+
+sequenceDiagram
+    autonumber
+    participant O as المنظم (Organizer)
+    participant A as الحاضر (Attendee)
+    participant UI as صفحات التقييم
+    participant EV as evaluationService
+    participant DB as Supabase (RLS + RPC)
+
+    rect rgb(240, 248, 255)
+    Note over O,DB: 1) إنشاء التقييم وأسئلته (منظم)
+    O->>UI: نموذج إنشاء تقييم
+    UI->>EV: createEvaluation(eventId, {title, ratingType, privacy})
+    EV->>DB: INSERT evaluations
+    DB-->>EV: evaluation
+    UI->>EV: updateEvaluationQuestions(evaluationId, questions[])
+    EV->>DB: INSERT evaluation_questions (لكل سؤال + options + sort_order)
+    DB-->>EV: questions
+    EV-->>UI: التقييم جاهز
+    end
+
+    rect rgb(245, 250, 250)
+    Note over A,DB: 2) جلب التقييم + تحقق مسبق
+    A->>UI: فتح صفحة التقييم
+    UI->>EV: getEvaluationWithQuestions(eventId)
+    EV->>DB: SELECT evaluations JOIN questions
+    DB-->>EV: evaluation + questions
+    UI->>EV: hasSubmitted(evaluationId, attendeeId)
+    EV->>DB: SELECT evaluation_submissions WHERE (evaluation_id, attendee_id)
+    DB-->>EV: boolean
+    alt سبق الإرسال
+        UI-->>A: "قمت بالتقييم مسبقًا" (لا تكرار)
+    else لم يُرسل
+        UI-->>A: عرض الأسئلة
+    end
+    end
+
+    rect rgb(255, 248, 245)
+    Note over A,DB: 3) إرسال التقييم عبر RPC submit_evaluation (تحقق خادمي صارم)
+    A->>UI: تعبئة النموذج + إرسال
+    UI->>EV: submitEvaluation(evaluationId, attendeeId, {rating, isPublic, answers})
+    EV->>DB: rpc("submit_evaluation", {...})
+    alt التقييم غير موجود
+        DB-->>EV: {"error": "Evaluation not found"}
+    else التسجيل غير confirmed
+        DB-->>EV: {"error": "Only confirmed attendees can submit an evaluation"}
+    else لا تذكرة أو لا حضور (لا attendance)
+        DB-->>EV: {"error": "You must attend the event to evaluate it"}
+    else سبق الإرسال (unique constraint)
+        DB-->>EV: {"error": "You have already submitted an evaluation for this event"}
+    else نجاح
+        DB->>DB: INSERT evaluation_submissions (ON CONFLICT DO NOTHING)
+        DB->>DB: INSERT evaluation_answers (لكل إجابة)
+        DB-->>EV: {"success": true, submission_id}
+        EV-->>UI: نجاح
+        UI-->>A: "تم إرسال تقييمك"
+    end
+    end
+
+    rect rgb(250, 245, 250)
+    Note over O,DB: 4) عرض النتائج (الخصوصية)
+    O->>UI: لوحة نتائج التقييم
+    UI->>EV: getEvaluationStats(evaluationId)
+    EV->>DB: SELECT submissions (متوسط/توزيع)
+    DB-->>EV: stats
+    alt privacy = 'secret'
+        UI-->>O: إحصاءات مجمعة فقط (بلا هوية)
+    else privacy = 'public'
+        UI->>EV: getPublicSubmissions(eventId)
+        EV->>DB: SELECT is_public submissions
+        DB-->>EV: إرسالات علنية مع أسماء (اختياري)
+        UI-->>O: عرض فردي
+    end
+    end

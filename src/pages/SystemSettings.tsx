@@ -1,6 +1,6 @@
 import { runtimeLocalizeMessage as localizeToast } from "../i18n/runtimeLocale"
 import { useLanguage } from "../contexts/LanguageContext"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Save, Palette, Globe, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "../components/ui/button"
@@ -14,20 +14,37 @@ import { getSettings, updateSettings, updateEmailTemplate } from "../services/se
 import { useSettings } from "../contexts/SettingsContext"
 import type { AppSettings, EmailTemplate } from "../types"
 
+const TEMPLATE_TYPE_LABELS: Record<string, string> = {
+  check_in: "Check In",
+  event_reminder: "Event Reminder",
+  event_update: "Event Update",
+  registration_confirmation: "Registration Confirmation",
+}
+
 export function SystemSettings() {
   const { t } = useLanguage()
   
   const { refreshSettings } = useSettings()
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState("")
 
-  useEffect(() => {
-    getSettings().then((s) => { setSettings(s); setLoading(false) }).catch((e: any) => {
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(false)
+    try {
+      const s = await getSettings()
+      setSettings(s)
+    } catch (e: any) {
+      setLoadError(true)
       toast.error(localizeToast(e?.message ?? "Failed to load settings"))
+    } finally {
       setLoading(false)
-    })
+    }
   }, [])
+
+  useEffect(() => { load() }, [load])
 
   const handleSaveGeneral = async () => {
     if (!settings) return
@@ -63,7 +80,7 @@ export function SystemSettings() {
     setSaving(tmpl.id)
     try {
       await updateEmailTemplate(tmpl.id, { subject: tmpl.subject, body: tmpl.body })
-      toast.success(t('Template "{type}" saved', { type: tmpl.type }))
+      toast.success(t('Template "{type}" saved', { type: t(TEMPLATE_TYPE_LABELS[tmpl.type] ?? tmpl.type.replace(/_/g, " ")) }))
     } catch (e: any) {
       toast.error(localizeToast(e?.message ?? "Failed to save template"))
     } finally {
@@ -72,7 +89,16 @@ export function SystemSettings() {
   }
 
   if (loading) return <Loading text={t("Loading settings...")} />
-  if (!settings) return null
+  if (loadError || !settings) {
+    return (
+      <Card role="alert">
+        <CardHeader><CardTitle>{t("Couldn't load settings")}</CardTitle></CardHeader>
+        <CardContent>
+          <Button className="mt-4" onClick={load}>{t("Try again")}</Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -137,7 +163,7 @@ export function SystemSettings() {
         <TabsContent value="email" className="mt-4 space-y-4">
           {settings.emailTemplates.map((tmpl) => (
             <Card key={tmpl.id}>
-              <CardHeader><CardTitle className="text-base capitalize">{tmpl.type.replace(/_/g, " ")}</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">{t(TEMPLATE_TYPE_LABELS[tmpl.type] ?? tmpl.type.replace(/_/g, " "))}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>{t("Subject")}</Label>

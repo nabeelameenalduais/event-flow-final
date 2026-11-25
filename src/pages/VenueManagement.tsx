@@ -74,7 +74,7 @@ function VenueForm({ venue, onClose }: { venue?: Venue; onClose: () => void }) {
                   facilities[opt.key] ? "bg-primary/10 border-primary text-primary" : "border-input text-muted-foreground hover:border-muted-foreground"
                 }`}
               >
-                <Icon size={14} /> {opt.label}
+                <Icon size={14} /> {t(opt.label)}
               </button>
             )
           })}
@@ -118,6 +118,7 @@ export function VenueManagement() {
   )
 
   const handleDelete = async (v: Venue) => {
+    if (!window.confirm(t('Delete venue "{name}"?', { name: v.name }))) return
     try {
       await deleteVenue(v.id)
       toast.success(t('"{name}" deleted', { name: v.name }))
@@ -163,7 +164,7 @@ export function VenueManagement() {
                     <div className="flex gap-1">
                       {FACILITY_OPTIONS.filter((f) => v.facilities[f.key]).map((f) => (
                         <Badge key={f.key} variant="outline" className="gap-1 text-xs">
-                          <f.icon size={10} /> {f.label}
+                          <f.icon size={10} /> {t(f.label)}
                         </Badge>
                       ))}
                       {Object.values(v.facilities).filter(Boolean).length === 0 && <span className="text-xs text-muted-foreground">{t("None")}</span>}

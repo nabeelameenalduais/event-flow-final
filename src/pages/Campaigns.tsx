@@ -96,7 +96,9 @@ export function Campaigns() {
     setRunningDue(true)
     try {
       const count = await processDueCampaigns()
-      toast.success(localizeToast(count > 0 ? `Sent ${count} due campaign${count === 1 ? "" : "s"}` : "No campaigns are due"))
+      toast.success(count > 0
+        ? (count === 1 ? t("Sent {count} due campaign", { count }) : t("Sent {count} due campaigns", { count }))
+        : t("No campaigns are due"))
       load()
     } catch (err) {
       toast.error(localizeToast(err instanceof Error ? err.message : "Failed to process due campaigns"))
@@ -132,7 +134,7 @@ export function Campaigns() {
   }
 
   const handleDelete = async (campaign: EmailCampaign) => {
-    if (!window.confirm(`Delete campaign “${campaign.name}”?`)) return
+    if (!window.confirm(t('Delete campaign "{name}"?', { name: campaign.name }))) return
     setBusyId(campaign.id)
     try {
       await deleteCampaign(campaign.id)
@@ -235,9 +237,9 @@ export function Campaigns() {
                       {campaign.sentCount}/{campaign.totalRecipients}
                       {campaign.failedCount > 0 && <span className="text-destructive"> · {t("{count} failed", { count: campaign.failedCount })}</span>}
                     </TableCell>
-                    <TableCell><Badge variant={statusVariant[campaign.status]}>{campaign.status}</Badge></TableCell>
+                    <TableCell><Badge variant={statusVariant[campaign.status]}>{t(campaign.status)}</Badge></TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {campaign.scheduledAt ? formatDateTime(campaign.scheduledAt) : campaign.sentAt ? `Sent ${formatDate(campaign.sentAt)}` : t("—")}
+                      {campaign.scheduledAt ? formatDateTime(campaign.scheduledAt) : campaign.sentAt ? t("Sent {date}", { date: formatDate(campaign.sentAt) }) : t("—")}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1 flex-wrap">
@@ -499,7 +501,7 @@ function RecipientsDialog({ campaign, onClose }: { campaign: EmailCampaign; onCl
           <DialogTitle>{campaign.name}</DialogTitle>
           <DialogDescription>
             {campaign.subject} · {campaign.sentCount} {t("sent /")} {campaign.totalRecipients} {t("recipients")}
-            {campaign.failedCount > 0 ? ` · ${campaign.failedCount} failed` : ""}
+            {campaign.failedCount > 0 ? ` · ${t("{count} failed", { count: campaign.failedCount })}` : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm whitespace-pre-wrap mb-3">{campaign.body}</div>
@@ -521,7 +523,7 @@ function RecipientsDialog({ campaign, onClose }: { campaign: EmailCampaign; onCl
                 <TableRow key={row.id}>
                   <TableCell className="text-sm">{row.email}</TableCell>
                   <TableCell>
-                    <Badge variant={row.status === "sent" ? "default" : row.status === "failed" ? "destructive" : "outline"}>{row.status}</Badge>
+                    <Badge variant={row.status === "sent" ? "default" : row.status === "failed" ? "destructive" : "outline"}>{t(row.status)}</Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {row.sentAt ? formatDateTime(row.sentAt) : row.error ?? t("—")}

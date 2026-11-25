@@ -65,6 +65,7 @@ export function FileManagement() {
   }
 
   const handleDelete = async (file: FileItem) => {
+    if (!window.confirm(t('Delete file "{name}"?', { name: file.name }))) return
     try {
       await deleteFile(file.id)
       toast.success(t('"{name}" deleted', { name: file.name }))
@@ -104,7 +105,7 @@ export function FileManagement() {
                 </div>
               )}
               <Button className="w-full" disabled={!selectedFile || uploading} onClick={handleUpload}>
-                {uploading ? "Uploading..." : t("Upload")}
+                {uploading ? t("Uploading...") : t("Upload")}
               </Button>
             </div>
           </DialogContent>
@@ -123,7 +124,15 @@ export function FileManagement() {
                 <CardContent className="p-4">
                   {isImage(file.type) ? (
                     <div className="w-full h-32 rounded-lg overflow-hidden mb-3 bg-muted flex items-center justify-center cursor-pointer" onClick={() => setPreview(file)}>
-                      <Image size={32} className="text-muted-foreground" />
+                      <Image size={32} className="text-muted-foreground absolute" />
+                      {file.url && (
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="w-full h-full object-cover relative"
+                          onError={(e) => { e.currentTarget.style.display = "none" }}
+                        />
+                      )}
                     </div>
                   ) : (
                     <div className="w-full h-32 rounded-lg mb-3 bg-muted flex items-center justify-center">
@@ -157,8 +166,16 @@ export function FileManagement() {
             <DialogTitle>{preview?.name}</DialogTitle>
           </DialogHeader>
           {preview && (
-            <div className="flex items-center justify-center p-4 bg-muted rounded-lg">
-              <Image size={64} className="text-muted-foreground" />
+            <div className="flex items-center justify-center p-4 bg-muted rounded-lg relative">
+              <Image size={64} className="text-muted-foreground absolute" />
+              {preview.url && (
+                <img
+                  src={preview.url}
+                  alt={preview.name}
+                  className="max-h-[60vh] max-w-full object-contain rounded relative"
+                  onError={(e) => { e.currentTarget.style.display = "none" }}
+                />
+              )}
             </div>
           )}
         </DialogContent>

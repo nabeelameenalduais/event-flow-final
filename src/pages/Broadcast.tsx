@@ -41,6 +41,15 @@ const statusVariant: Record<CampaignStatus, "default" | "secondary" | "outline" 
   cancelled: "outline",
 }
 
+const statusLabel: Record<CampaignStatus, string> = {
+  draft: "Draft",
+  scheduled: "Scheduled",
+  sending: "Sending",
+  sent: "Sent",
+  failed: "Failed",
+  cancelled: "Cancelled",
+}
+
 const channelLabel: Record<AdminMessageChannel, string> = {
   in_app: "In-app",
   email: "Email",
@@ -55,6 +64,7 @@ export function Broadcast() {
   const [events, setEvents] = useState<Event[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [runningDue, setRunningDue] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -63,6 +73,7 @@ export function Broadcast() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const [messageRows, eventRows, userRows] = await Promise.all([
         getAdminMessages(),
@@ -73,6 +84,7 @@ export function Broadcast() {
       setEvents(eventRows)
       setUsers(userRows.items)
     } catch (err) {
+      setLoadError(true)
       toast.error(localizeToast(err instanceof Error ? err.message : "Failed to load broadcasts"))
     } finally {
       setLoading(false)
@@ -131,7 +143,7 @@ export function Broadcast() {
   }
 
   const handleDelete = async (message: AdminMessage) => {
-    if (!window.confirm(`Delete broadcast “${message.title}”?`)) return
+    if (!window.confirm(t('Delete broadcast "{title}"?', { title: message.title }))) return
     setBusyId(message.id)
     try {
       await deleteAdminMessage(message.id)
@@ -145,6 +157,16 @@ export function Broadcast() {
   }
 
   if (loading) return <Loading text={t("Loading broadcasts...")} />
+  if (loadError) {
+    return (
+      <Card role="alert">
+        <CardHeader><CardTitle>{t("Couldn't load broadcasts")}</CardTitle></CardHeader>
+        <CardContent>
+          <Button className="mt-4" onClick={load}>{t("Try again")}</Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const pending = messages.filter((m) => m.status === "draft" || m.status === "scheduled")
   const archive = messages.filter((m) => m.status !== "draft" && m.status !== "scheduled")
@@ -254,16 +276,16 @@ function MessageTable({
               <span className="flex items-center gap-1">
                 {message.channel !== "email" && <Bell size={13} />}
                 {message.channel !== "in_app" && <Mail size={13} />}
-                {channelLabel[message.channel]}
+                {t(channelLabel[message.channel])}
               </span>
             </TableCell>
             <TableCell className="text-sm">
               {message.sentCount}/{message.totalRecipients}
               {message.failedCount > 0 && <span className="text-destructive"> · {message.failedCount} {t("failed")}</span>}
             </TableCell>
-            <TableCell><Badge variant={statusVariant[message.status]}>{message.status}</Badge></TableCell>
+            <TableCell><Badge variant={statusVariant[message.status]}>{t(statusLabel[message.status])}</Badge></TableCell>
             <TableCell className="text-sm text-muted-foreground">
-              {message.scheduledAt ? formatDateTime(message.scheduledAt) : message.sentAt ? `Sent ${formatDate(message.sentAt)}` : t("—")}
+              {message.scheduledAt ? formatDateTime(message.scheduledAt) : message.sentAt ? `${t("Sent")} ${formatDate(message.sentAt)}` : t("—")}
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1 flex-wrap">
@@ -498,8 +520,8 @@ function RecipientsDialog({ message, onClose }: { message: AdminMessage; onClose
         <DialogHeader>
           <DialogTitle>{message.title}</DialogTitle>
           <DialogDescription>
-            {channelLabel[message.channel]} · {message.sentCount} {t("delivered /")} {message.totalRecipients} {t("recipients")}
-            {message.failedCount > 0 ? ` · ${message.failedCount} failed` : ""}
+            {t(channelLabel[message.channel])} · {message.sentCount} {t("delivered /")} {message.totalRecipients} {t("recipients")}
+            {message.failedCount > 0 ? ` · ${message.failedCount} ${t("failed")}` : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm whitespace-pre-wrap mb-3">{message.body}</div>
@@ -522,7 +544,7 @@ function RecipientsDialog({ message, onClose }: { message: AdminMessage; onClose
                 <TableRow key={row.id}>
                   <TableCell className="text-sm">{row.email ?? t("—")}</TableCell>
                   <TableCell><Badge variant={row.inAppSent ? "default" : "outline"}>{row.inAppSent ? t("sent") : t("—")}</Badge></TableCell>
-                  <TableCell><Badge variant={row.emailStatus === "sent" ? "default" : row.emailStatus === "failed" ? "destructive" : "outline"}>{row.emailStatus}</Badge></TableCell>
+                  <TableCell><Badge variant={row.emailStatus === "sent" ? "default" : row.emailStatus === "failed" ? "destructive" : "outline"}>{t(row.emailStatus)}</Badge></TableCell>
                   <TableCell className="text-xs text-destructive">{row.error ?? t("—")}</TableCell>
                 </TableRow>
               ))}

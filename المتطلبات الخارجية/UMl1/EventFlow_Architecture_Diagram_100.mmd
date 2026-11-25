@@ -1,0 +1,115 @@
+---
+title: EventFlow — الهندسة المعمارية للنظام (Client-First on Supabase)
+config:
+  theme: default
+  look: classic
+  layout: elk
+  deterministicIds: true
+  deterministicIDSeed: eventflow-architecture
+  handDrawnSeed: 1
+---
+%% مصدر الحقيقة: package.json, vite.config.ts, src/**, supabase/**،
+%% المتطلبات الخارجية/UMl1/03_erd.mmd، EventFlow_Component_100.mmd.
+%% لا يوجد خادم تطبيقات: SPA تتصل مباشرة بـ Supabase عبر publishable/anon key.
+%% المسار الفعلي للمساعد: useChat → /lmstudio/v1/chat/completions + REST tools من المتصفح.
+%% دالة Edge/OpenRouter بديل تصميمي غير مستخدم من الواجهة الحالية.
+flowchart TB
+    subgraph CLIENT["طبقة العرض — المتصفح (React 19 + TypeScript + Vite + Tailwind)"]
+        direction TB
+        PAGES["الصفحات + المكوّنات المشتركة<br/>src/pages, src/components"]
+        STATE["السياقات + حماية المسارات<br/>AuthContext, ThemeContext, LanguageContext<br/>ProtectedRoute, PublicRoute + RBAC"]
+        CHATUI["واجهة المساعد useChat<br/>حلقة أدوات + 6 REST tools"]
+        QR["ماسح QR<br/>html5-qrcode"]
+        NOAPP["بلا خادم تطبيقات<br/>SPA ←→ Supabase مباشرة"]
+    end
+
+    subgraph SERVICES["طبقة الخدمات — Repository (src/services)"]
+        direction TB
+        AUTHS["المصادقة والجلسات<br/>authService, deviceSessionService<br/>passwordResetService"]
+        DOMAIN["الفعاليات والتسجيل<br/>eventService, invitationService<br/>ticketService"]
+        OPS["الحضور والتقييم<br/>attendanceService, evaluationService<br/>feedbackService"]
+        SUPPORT["الدعم والإشعارات<br/>chatService, notificationService<br/>emailService, campaignService"]
+        ADMIN["الإدارة والتقارير<br/>userService, banService, auditService<br/>reportsService, settingsService"]
+        UTIL["أدوات مشتركة<br/>rateLimit 30 req/60s<br/>supabaseErrors, ticketCode, eventAccess"]
+    end
+
+    subgraph DATA["طبقة الوصول للبيانات — Supabase JS (src/lib)"]
+        direction TB
+        SB["SupabaseClient<br/>publishable/anon key + PostgREST"]
+        TOKEN["جلسة جهاز مخصصة<br/>eventflow_session token<br/>ليست Supabase Auth JWT"]
+        REST["أدوات المساعد REST<br/>تنفّذ من المتصفح باستخدام anon key"]
+    end
+
+    subgraph BACKEND["Supabase — الواجهة الخلفية المدارة"]
+        direction TB
+        PG["PostgreSQL<br/>30 جدول ERD + 17 جدول مساند<br/>RLS + قيود + فهارس + مشغلات"]
+        RPC["RPCs SECURITY DEFINER<br/>مصادقة/جلسات/تقييم/حظر/مالية/جمهور"]
+        RT["Realtime<br/>chat_channels, chat_messages<br/>meeting_chat_messages"]
+        STG["Storage<br/>bucket: uploads"]
+        EDGE["Edge Function chatbot/index.ts<br/>مسار بديل غير مستخدم من الواجهة"]
+    end
+
+    subgraph EXTERNAL["أنظمة خارجية"]
+        direction TB
+        LM["LM Studio محلي — المسار الفعلي<br/>/lmstudio/v1/chat/completions<br/>Vite proxy → 127.0.0.1:1234"]
+        CAM["كاميرا الجهاز<br/>فيديو + مسح QR"]
+        EMAIL["البريد<br/>mock افتراضي | Resend | SendGrid"]
+        OR["OpenRouter<br/>لدالة Edge البديلة فقط"]
+    end
+
+    PAGES --> STATE
+    PAGES --> CHATUI
+    PAGES --> QR
+    PAGES --> NOAPP
+    PAGES --> AUTHS
+    PAGES --> DOMAIN
+    PAGES --> OPS
+    PAGES --> SUPPORT
+    PAGES --> ADMIN
+    STATE --> AUTHS
+
+    CHATUI -->|"HTTP POST — فعلي"| LM
+    CHATUI -->|"REST tools (anon key)"| REST
+    CHATUI -.->|"بديل غير مستخدم"| EDGE
+    QR --> CAM
+    QR --> OPS
+
+    AUTHS --> UTIL
+    DOMAIN --> UTIL
+    OPS --> UTIL
+    SUPPORT --> UTIL
+    ADMIN --> UTIL
+    AUTHS --> TOKEN
+    AUTHS --> SB
+    DOMAIN --> SB
+    OPS --> SB
+    SUPPORT --> SB
+    ADMIN --> SB
+    UTIL --> SB
+    TOKEN --> SB
+    REST --> SB
+
+    SB -->|"HTTPS + publishable/anon key"| PG
+    SB -->|"rpc(...)"| RPC
+    SB -->|"subscribe (postgres_changes)"| RT
+    SB -->|"upload/download"| STG
+    RPC --> PG
+    RT --> PG
+    STG --> PG
+
+    EDGE -->|"service-role key — خادم فقط"| PG
+    EDGE -->|"HTTP chat/completions"| OR
+    SUPPORT -->|"mock / live"| EMAIL
+
+    classDef client fill:#e7f0ff,stroke:#1f3864,stroke-width:1.2;
+    classDef svc fill:#eaf7ea,stroke:#1e7145,stroke-width:1.2;
+    classDef data fill:#eef2ff,stroke:#3730a3,stroke-width:1.2;
+    classDef be fill:#fff3e0,stroke:#b26a00,stroke-width:1.2;
+    classDef ext fill:#f3e8ff,stroke:#6a3ab2,stroke-width:1.2;
+    classDef note fill:#fff9e6,stroke:#b7791f,stroke-width:1.2,stroke-dasharray:4 3;
+    class PAGES,STATE,CHATUI,QR client
+    class NOAPP note
+    class AUTHS,DOMAIN,OPS,SUPPORT,ADMIN,UTIL svc
+    class SB,TOKEN,REST data
+    class PG,RPC,RT,STG,EDGE be
+    class LM,CAM,EMAIL,OR ext

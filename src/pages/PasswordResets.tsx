@@ -30,11 +30,13 @@ export function PasswordResets() {
   const [requests, setRequests] = useState<PasswordResetRequestItem[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [resolving, setResolving] = useState<PasswordResetRequestItem | null>(null)
   const [filter, setFilter] = useState<"pending" | "all">("pending")
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const [rows, userRows] = await Promise.all([
         getPasswordResetRequests(),
@@ -43,6 +45,7 @@ export function PasswordResets() {
       setRequests(rows)
       setUsers(userRows.items.filter((u) => !u.deletedAt))
     } catch (err) {
+      setLoadError(true)
       toast.error(localizeToast(err instanceof Error ? err.message : "Failed to load password reset requests"))
     } finally {
       setLoading(false)
@@ -53,7 +56,7 @@ export function PasswordResets() {
 
   const handleReject = async (request: PasswordResetRequestItem) => {
     if (!user) return
-    const note = window.prompt("Optional note for the requester:") ?? ""
+    const note = window.prompt(t("Optional note for the requester:")) ?? ""
     try {
       await rejectPasswordResetRequest(request.id, user.id, note)
       toast.success(t("Request rejected"))
@@ -64,6 +67,16 @@ export function PasswordResets() {
   }
 
   if (loading) return <Loading text={t("Loading password reset requests...")} />
+  if (loadError) {
+    return (
+      <Card role="alert">
+        <CardHeader><CardTitle>{t("Couldn't load password reset requests")}</CardTitle></CardHeader>
+        <CardContent>
+          <Button className="mt-4" onClick={load}>{t("Try again")}</Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const visible = filter === "pending" ? requests.filter((r) => r.status === "pending") : requests
   const pendingCount = requests.filter((r) => r.status === "pending").length
@@ -116,7 +129,7 @@ export function PasswordResets() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={request.status === "pending" ? "secondary" : request.status === "resolved" ? "default" : "outline"}>
-                        {request.status}
+                        {t(request.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{formatDateTime(request.createdAt)}</TableCell>
@@ -224,7 +237,7 @@ function ResolveDialog({
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>{t("Cancel")}</Button>
-            <Button type="submit" disabled={saving}>{saving ? "Resetting..." : t("Reset & send password")}</Button>
+            <Button type="submit" disabled={saving}>{saving ? t("Resetting...") : t("Reset & send password")}</Button>
           </div>
         </form>
       </DialogContent>
@@ -269,7 +282,7 @@ function DirectResetPanel({ users, onDone }: { users: any[]; onDone: () => void 
               className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm">
               <option value="">{t("Select a user")}</option>
               {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.profile ? `${u.profile.firstName} ${u.profile.lastName}` : u.email} {t("—")} {u.email}</option>
+                <option key={u.id} value={u.id}>{u.profile ? `${u.profile.firstName} ${u.profile.lastName} — ${u.email}` : u.email}</option>
               ))}
             </select>
           </div>

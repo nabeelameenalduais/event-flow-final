@@ -1,0 +1,131 @@
+@startuml eventflow_use_case_v6
+title EventFlow System - Use Case Diagram
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam linetype ortho
+skinparam monochrome true
+
+actor "Platform User" as PlatformUser <<abstract>>
+actor "Visitor" as Visitor
+actor "Registered User" as RegisteredUser <<abstract>>
+actor "Attendee" as Attendee
+actor "Organizer" as Organizer
+actor "Administrator" as Administrator
+actor "Email Service" as EmailService
+actor "Jitsi Meet" as JitsiMeet
+
+PlatformUser <|-- Visitor
+PlatformUser <|-- RegisteredUser
+RegisteredUser <|-- Attendee
+RegisteredUser <|-- Organizer
+Organizer <|-- Administrator
+rectangle "EventFlow System" as System {
+  package "A. ACCOUNT & ACCESS" as PkgA {
+    usecase "Register Account" as UC_RegisterAccount
+    usecase "Log In" as UC_LogIn
+    usecase "Recover Account Access" as UC_RecoverAccount
+    usecase "Restore Deleted Account" as UC_RestoreDeletedAccount
+    usecase "Manage Account" as UC_ManageAccount
+    usecase "View Dashboard and Notifications" as UC_ViewDashboard
+  }
+  package "B. EVENT DISCOVERY" as PkgB {
+    usecase "Browse Events" as UC_BrowseEvents
+    usecase "View Event Details" as UC_ViewEventDetails
+    usecase "Access Private Event via Invitation Code" as UC_AccessPrivateEvent
+    usecase "Ask EventFlow Assistant" as UC_AskAssistant
+  }
+  package "C. EVENT REQUESTS & APPROVAL" as PkgC {
+    usecase "Submit and Track Event Request" as UC_SubmitEventRequest
+    usecase "Review Event Requests" as UC_ReviewEventRequests
+    usecase "Generate Draft Event" as UC_GenerateDraftEvent
+  }
+  package "D. EVENT PARTICIPATION" as PkgD {
+    usecase "Cancel Registration" as UC_CancelRegistration
+    usecase "Join Event Waitlist" as UC_JoinWaitlist
+    usecase "Register for Event" as UC_RegisterForEvent
+    usecase "View and Download E-Ticket" as UC_ViewDownloadETicket
+    usecase "Submit Event Review" as UC_SubmitReview
+    usecase "Submit Event Evaluation" as UC_SubmitEvaluation
+    usecase "Participate in Event Chat" as UC_ParticipateChat
+    usecase "Join Online Meeting" as UC_JoinMeeting
+  }
+  package "E. EVENT OPERATIONS" as PkgE {
+    usecase "Create/Edit Event" as UC_CreateEditEvent
+    usecase "Manage Event Lifecycle" as UC_ManageLifecycle
+    usecase "Manage Registrations and Invitations" as UC_ManageRegistrationsInvitations
+    usecase "Manage Schedule and Speakers" as UC_ManageScheduleSpeakers
+    usecase "Perform Check-In" as UC_PerformCheckIn
+    usecase "Validate E-Ticket" as UC_ValidateETicket
+    usecase "Perform Check-Out" as UC_PerformCheckOut
+    usecase "Manage Event Finances" as UC_ManageFinances
+    usecase "Manage Evaluation and Feedback" as UC_ManageFeedback
+  }
+  package "F. PLATFORM ADMINISTRATION & GOVERNANCE" as PkgF {
+    usecase "Assign Event Organizers" as UC_AssignOrganizers
+    usecase "Administer Finance" as UC_AdministerFinance
+    usecase "Manage Bans" as UC_ManageBans
+    usecase "Manage Audience Access" as UC_ManageAudienceAccess
+    usecase "Initiate User Ban or Revocation" as UC_InitiateBanRevocation
+    usecase "Manage Audience and Campaigns" as UC_ManageAudienceCampaigns
+    usecase "Monitor Security and Audit Logs" as UC_MonitorSecurityAudit
+    usecase "Configure System Settings and Email Templates" as UC_ConfigureSettingsTemplates
+    usecase "Broadcast Admin Message" as UC_BroadcastMessage
+    usecase "Manage Reference Data and Files" as UC_ManageReferenceDataFiles
+    usecase "View Reports and Analytics" as UC_ViewReportsAnalytics
+    usecase "Manage Users, Roles, and Password Resets" as UC_ManageUsersRolesPasswords
+  }
+}
+
+PlatformUser -- UC_BrowseEvents
+PlatformUser -- UC_ViewEventDetails
+PlatformUser -- UC_AccessPrivateEvent
+PlatformUser -- UC_AskAssistant
+Visitor -- UC_RegisterAccount
+Visitor -- UC_LogIn
+Visitor -- UC_RecoverAccount
+Visitor -- UC_RestoreDeletedAccount
+RegisteredUser -- UC_ViewDashboard
+RegisteredUser -- UC_ManageAccount
+RegisteredUser -- UC_SubmitEventRequest
+RegisteredUser -- UC_ParticipateChat
+RegisteredUser -- UC_JoinMeeting
+Attendee -- UC_RegisterForEvent
+Attendee -- UC_CancelRegistration
+Attendee -- UC_ViewDownloadETicket
+Attendee -- UC_SubmitReview
+Attendee -- UC_SubmitEvaluation
+Attendee -- UC_JoinWaitlist
+Organizer -- UC_CreateEditEvent
+Organizer -- UC_ManageLifecycle
+Organizer -- UC_ManageRegistrationsInvitations
+Organizer -- UC_ManageScheduleSpeakers
+Organizer -- UC_PerformCheckIn
+Organizer -- UC_PerformCheckOut
+Organizer -- UC_ManageFinances
+Organizer -- UC_ManageFeedback
+Organizer -- UC_InitiateBanRevocation
+Organizer -- UC_ManageAudienceCampaigns
+Administrator -- UC_ManageUsersRolesPasswords
+Administrator -- UC_ManageReferenceDataFiles
+Administrator -- UC_ViewReportsAnalytics
+Administrator -- UC_ConfigureSettingsTemplates
+Administrator -- UC_MonitorSecurityAudit
+Administrator -- UC_BroadcastMessage
+Administrator -- UC_AssignOrganizers
+Administrator -- UC_ReviewEventRequests
+Administrator -- UC_AdministerFinance
+Administrator -- UC_ManageBans
+Administrator -- UC_ManageAudienceAccess
+EmailService -- UC_RecoverAccount
+EmailService -- UC_RegisterForEvent
+EmailService -- UC_ManageAudienceCampaigns
+EmailService -- UC_BroadcastMessage
+JitsiMeet -- UC_JoinMeeting
+
+UC_RestoreDeletedAccount ..> UC_RecoverAccount : <<extend>>
+UC_AccessPrivateEvent ..> UC_ViewEventDetails : <<extend>>
+UC_JoinWaitlist ..> UC_RegisterForEvent : <<extend>>
+UC_PerformCheckIn ..> UC_ValidateETicket : <<include>>
+UC_ReviewEventRequests ..> UC_GenerateDraftEvent : <<include>>
+@enduml

@@ -1,0 +1,57 @@
+---
+title: EventFlow — آلة حالة التسجيل (Registration)
+config:
+  theme: default
+  look: classic
+  layout: elk
+  deterministicIds: true
+  deterministicIDSeed: eventflow-registration-state
+  handDrawnSeed: 1
+---
+%% مصدر الحقيقة: src/services/eventService.ts (registerForEvent,
+%% promoteFirstWaitlisted, cancelRegistration, deleteRegistrationHard)،
+%% src/constants.ts، src/types/index.ts، supabase/schema.sql
+%% (notify_waitlist_promotion / trigger_waitlist_promotion)،
+%% supabase/migrations/2026-11-06_all_additions.sql (attendance_mode / hybrid).
+%% النطاق: حالات التسجيل الفعلية فقط: confirmed / waitlisted / cancelled.
+%% "pending" موجودة في النوع والثوابت لكنها غير مستخدمة تشغيلياً، لذا تظهر كملاحظة لا كحالة.
+stateDiagram-v2
+    direction TB
+
+    state "confirmed<br/>تذكرة صادرة" as Confirmed
+    state "waitlisted<br/>قائمة الانتظار" as Waitlisted
+    state "cancelled<br/>نهائي" as Cancelled
+
+    classDef confirmed fill:#e6f7ee,stroke:#1a7f37,stroke-width:1.5;
+    classDef waitlisted fill:#fff8e6,stroke:#b7791f,stroke-width:1.5;
+    classDef cancelled fill:#fdecea,stroke:#b91c1c,stroke-width:1.5;
+
+    [*] --> Confirmed : registerForEvent<br/>[guards OK + capacity available]<br/>/ insert confirmed<br/>/ generateTicketForRegistration<br/>/ registration_confirmation + audience sync
+    [*] --> Waitlisted : registerForEvent<br/>[guards OK + capacity full]<br/>/ insert waitlisted<br/>/ waitlist notification + position<br/>/ no ticket yet
+    Waitlisted --> Confirmed : promoteFirstWaitlisted<br/>[first by registered_at + mode-filtered if hybrid]<br/>/ status=confirmed<br/>/ ticket + notification + email<br/>/ trigger_waitlist_promotion
+    Confirmed --> Cancelled : cancelRegistration<br/>[previous status=confirmed]<br/>/ frees one seat<br/>/ may promote next waitlisted
+    Waitlisted --> Cancelled : cancelRegistration<br/>/ no seat freed<br/>/ no promotion
+    Confirmed --> [*] : deleteRegistrationHard<br/>[row removed + may promote]<br/>/ registration_removed notification
+    Waitlisted --> [*] : deleteRegistrationHard<br/>[row removed + no promotion]<br/>/ registration_removed notification
+    Cancelled --> [*] : terminal
+
+    note right of Confirmed
+      Entry guards: published event, deadline open,
+      event not ended, valid private invitation,
+      no active ban, no existing registration.
+      Hybrid capacity is per attendance_mode.
+    end note
+
+    note left of Waitlisted
+      لا توجد حالة تشغيلية "pending":
+      موجودة في النوع والثوابت فقط، ولا يستخدمها registerForEvent.
+    end note
+
+    note right of Cancelled
+      لا يُبطل إلغاء التسجيل التذكرة، ولا يوجد شرط
+      "انتهت الفعالية". إلغاء waitlisted لا يُحرّر مقعدًا.
+    end note
+
+    class Confirmed confirmed;
+    class Waitlisted waitlisted;
+    class Cancelled cancelled;

@@ -1,0 +1,112 @@
+---
+title: EventFlow — تسلسل التسجيل في الفعاليات (مقاعد / قائمة انتظار / دعوات)
+---
+%% Source: src/services/eventService.ts (registerForEvent, cancelRegistration),
+%%        src/services/invitationService.ts, src/services/notificationService.ts,
+%%        src/services/ticketService.ts (generateTicket).
+
+sequenceDiagram
+    autonumber
+    participant U as الحاضر (Attendee)
+    participant UI as صفحة الفعالية
+    participant ES as eventService
+    participant INV as invitationService
+    participant TS as ticketService
+    participant NS as notificationService
+    participant DB as Supabase (RLS)
+
+    rect rgb(240, 248, 255)
+    Note over U,DB: 1) تسجيل في فعالية عامة (Happy Path)
+    U->>UI: الضغط على "سجّل الآن"
+    UI->>ES: registerForEvent(eventId, attendeeId)
+    ES->>DB: SELECT events (title, capacity, visibility, status, deadlines)
+    DB-->>ES: بيانات الفعالية
+    alt فعالية غير منشورة / deadline انقضى / انتهت
+        ES-->>UI: "This event is not open for registration" / "deadline passed" / "ended"
+    else فعالية عامة صالحة
+        ES->>DB: SELECT registrations (تحقق من تكرار التسجيل)
+        alt مسجل مسبقًا
+            ES-->>UI: "Already registered for this event"
+        else جديد
+            ES->>DB: SELECT count(status='confirmed')
+            alt count >= capacity (المقاعد ممتلئة)
+                ES->>DB: INSERT registrations (status='waitlisted')
+                ES->>NS: sendNotification(user_id, "waitlist", ...)
+                ES-->>UI: { waitlisted: true }
+                UI-->>U: "أضيفت إلى قائمة الانتظار"
+            else سعة متاحة
+                ES->>DB: INSERT registrations (status='confirmed')
+                ES->>TS: generateTicket(registrationId, event.title)
+                TS->>DB: INSERT tickets (unique_code, qr_code_url)
+                TS->>TS: QRCode.toDataURL(...)
+                DB-->>TS: ticket
+                TS-->>ES: Ticket
+                ES->>NS: sendNotification(user_id, "registration_confirmation", ...)
+                ES-->>UI: { registration, waitlisted: false }
+                UI-->>U: "تم التأكيد — تذكرتك جاهزة"
+            end
+        end
+    end
+    end
+
+    rect rgb(245, 250, 250)
+    Note over U,DB: 2) تسجيل في فعالية خاصة (Invitation Link)
+    U->>UI: إدخال رمز الدعوة + "سجّل"
+    UI->>ES: registerForEvent(eventId, attendeeId, code)
+    ES->>DB: SELECT events (visibility='private')
+    alt لا يوجد رمز
+        ES-->>UI: "An invitation code is required for this private event"
+    else يوجد رمز
+        ES->>INV: getLinkByCode(code)
+        INV->>DB: SELECT invitation_links WHERE code=...
+        alt رابط غير موجود
+            ES-->>UI: "Invalid invitation link"
+        else الرابط مستخدم مسبقًا
+            ES-->>UI: "This invitation link has already been used"
+        else الرابط لفعالية أخرى
+            ES-->>UI: "This invitation link does not belong to this event"
+        else بريد الدعوة مختلف عن بريد الحاضر
+            ES->>DB: SELECT profiles.user.email
+            ES-->>UI: "This invitation was sent to a different email address"
+        else كل التحقق ناجح
+            ES->>DB: INSERT registrations (status='confirmed')
+            ES->>TS: generateTicket(...)
+            ES->>INV: markLinkAsUsed(link.id)
+            ES->>NS: إشعار للمنظم "invitation_used"
+            ES-->>UI: { registration, waitlisted: false }
+        end
+    end
+    end
+
+    rect rgb(255, 248, 245)
+    Note over U,DB: 3) إلغاء التسجيل + ترقية قائمة الانتظار (NF)
+    U->>UI: "إلغاء التسجيل"
+    UI->>ES: cancelRegistration(id)
+    ES->>DB: SELECT registration (status)
+    alt الحالة كانت 'confirmed'
+        ES->>DB: UPDATE registrations SET status='cancelled'
+        ES->>DB: SELECT أول مسجّل في قائمة الانتظار (order by registered_at)
+        alt يوجد مسجّل في القائمة
+            ES->>DB: UPDATE SET status='confirmed' (ترقية)
+            ES->>TS: generateTicket للترقية
+            DB->>DB: TRIGGER notify_waitlist_promotion (إشعار تلقائي)
+            ES-->>UI: true (تم الترقية)
+        else لا يوجد
+            ES-->>UI: true
+        end
+    else الحالة كانت 'waitlisted'
+        ES->>DB: UPDATE SET status='cancelled'
+        ES-->>UI: true
+    end
+    end
+
+    rect rgb(250, 245, 250)
+    Note over U,DB: 4) إنشاء دعوة من المنظم
+    U->>UI: (منظم) إضافة بريد ضيف
+    UI->>INV: createInvitation(eventId, email)
+    INV->>DB: INSERT invitation_links (code=random)
+    INV->>NS: إشعار الضيف "new_invitation"
+    DB-->>INV: invitation link
+    INV-->>UI: رابط/رمز الدعوة
+    UI-->>U: نسخ الرمز وإرساله للضيف
+    end

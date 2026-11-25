@@ -23,18 +23,31 @@ export function Reports() {
   
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
   const [modeFilter, setModeFilter] = useState<ReportModeFilter>("all")
 
   useEffect(() => {
     let active = true
     setLoading(true)
+    setError(false)
     getReportData(modeFilter)
       .then((d) => { if (active) { setData(d); setLoading(false) } })
-      .catch(() => { if (active) setLoading(false) })
+      .catch(() => { if (active) { setError(true); setLoading(false) } })
     return () => { active = false }
-  }, [modeFilter])
+  }, [modeFilter, retryCount])
 
   if (loading) return <Loading text={t("Loading reports...")} />
+  if (error) {
+    return (
+      <Card role="alert">
+        <CardHeader><CardTitle>{t("Couldn't load reports")}</CardTitle></CardHeader>
+        <CardContent>
+          <Button className="mt-4" onClick={() => setRetryCount((count) => count + 1)}>{t("Try again")}</Button>
+        </CardContent>
+      </Card>
+    )
+  }
   if (!data) return null
 
   const handlePrint = () => window.print()
@@ -43,24 +56,26 @@ export function Reports() {
 
   const handleExportAll = () => {
   
-    exportSection(data.eventPopularity.map((e: any) => ({ "Event": e.name, Registrations: e.registrations })), "event-popularity")
+    exportSection(data.eventPopularity.map((e: any) => ({ [t("Event")]: e.name, [t("Registrations")]: e.registrations })), "event-popularity")
     exportSection(data.attendanceRateByEvent.map((e: any) => ({
-      "Event": e.name, Registered: e.registered, Attended: e.attended, "Attendance %": e.rate, "Fill %": e.fillRate,
+      [t("Event")]: e.name, [t("Registered")]: e.registered, [t("Attended")]: e.attended, [t("Attendance %")]: e.rate, [t("Fill %")]: e.fillRate,
     })), "attendance")
-    exportSection(data.topAttendees.map((a: any) => ({ Name: a.name, "Events Attended": a.attended })), "top-attendees")
+    exportSection(data.topAttendees.map((a: any) => ({ [t("Name")]: a.name, [t("Events Attended")]: a.attended })), "top-attendees")
     exportSection(data.avgRatingByEvent.map((e: any) => ({
-      "Event": e.name, "Avg Rating": e.average, Count: e.count,
+      [t("Event")]: e.name, [t("Avg Rating")]: e.average, [t("Count")]: e.count,
     })), "ratings")
     exportSection(data.costsByEvent.map((c: any) => ({
-      "Event": c.name, Planned: c.planned, Actual: c.actual, Difference: c.difference,
+      [t("Event")]: c.name, [t("Planned")]: c.planned, [t("Actual")]: c.actual, [t("Difference")]: c.difference,
     })), "costs")
-    exportSection(data.registrationTrend.map((t: any) => ({ Month: t.month, Registrations: t.count })), "registration-trend")
+    exportSection(data.registrationTrend.map((r: any) => ({ [t("Month")]: r.month, [t("Registrations")]: r.count })), "registration-trend")
     exportSection(data.attendanceByMode.map((m: any) => ({
-      Mode: m.name, "Confirmed registrations": m.confirmed, Attended: m.attended,
+      [t("Mode")]: t(m.name), [t("Confirmed registrations")]: m.confirmed, [t("Attended")]: m.attended,
     })), "attendance-by-mode")
-    exportSection(data.statusPie, "registrations-by-status")
+    exportSection(data.statusPie.map((d: any) => ({
+      [t("Status")]: t(d.name), [t("Count")]: d.value,
+    })), "registrations-by-status")
     exportSection(data.attendanceRateByEvent.map((e: any) => ({
-      "Event": e.name, Status: t(e.status ?? "published"), Confirmed: e.confirmed, Cancelled: e.cancelled, Waitlisted: e.waitlisted, Attended: e.attended,
+      [t("Event")]: e.name, [t("Status")]: t(e.status ?? "published"), [t("Confirmed")]: e.confirmed, [t("Cancelled")]: e.cancelled, [t("Waitlisted")]: e.waitlisted, [t("Attended")]: e.attended,
     })), "per-event-detail")
   }
 

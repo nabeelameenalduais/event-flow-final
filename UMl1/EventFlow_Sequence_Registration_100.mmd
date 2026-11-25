@@ -1,0 +1,232 @@
+%%{init: {'theme': 'neutral', 'sequence': {'diagramMarginX': 20, 'diagramMarginY': 8, 'actorMargin': 30, 'boxMargin': 3, 'boxTextMargin': 2, 'noteMargin': 3, 'messageMargin': 18, 'mirrorActors': false, 'bottomMarginAdj': 0, 'useMaxWidth': true, 'wrap': false}}}%%
+sequenceDiagram
+    autonumber
+    actor Org as المنظم (Organizer)
+    actor Att as الحضور (Attendee)
+    participant Page as صفحة الحدث (EventDetail)
+    participant IM as صفحة إدارة الدعوات (InvitationManagement)
+    participant ES as eventService
+    participant Ban as banService
+    participant IS as invitationService
+    participant TS as ticketService
+    participant NS as notificationService
+    participant Aud as audienceService
+    participant Mail as emailService
+    participant DB as Supabase (RLS)
+
+    Note over Att,DB: 1) التسجيل في فعالية عامة (Happy Path) - بدون رمز دعوة
+    Att->>Page: يفتح صفحة الحدث
+    Page->>ES: registerForEvent(eventId, attendeeId, undefined, attendanceMode)
+    ES->>DB: SELECT events (title, capacity, visibility, status, start_date, end_date, registration_deadline, event_type, online_capacity, in_person_capacity, category_id)
+    DB-->>ES: بيانات الحدث
+    alt status != published
+        ES-->>Page: خطأ "This event is not open for registration"
+    else registration_deadline < now
+        ES-->>Page: خطأ "The registration deadline has passed"
+    else end_date < now
+        ES-->>Page: خطأ "This event has already ended"
+    else الفحوصات الأساسية سليمة
+        ES->>DB: SELECT profiles (id, user_id, user:users(email))
+        DB-->>ES: الملف الشخصي
+        alt لا يوجد profile
+            ES-->>Page: خطأ "Profile not found"
+        else
+            ES->>Ban: checkBanForRegistration(userId, eventId, categoryId)
+            Ban->>DB: RPC bans_check_registration(session_token, eventId, categoryId)
+            DB-->>Ban: ban | null
+            Ban-->>ES: ban | null
+            alt يوجد حظر نشط
+                ES-->>Page: خطأ "You cannot register for this event because of ..."
+                Note over ES,TS: النطاق، المدة، السبب
+            else لا يوجد حظر
+                ES->>DB: SELECT registrations WHERE event_id/attendee_id AND status != 'cancelled'
+                DB-->>ES: التسجيل الحالي أو لا شيء
+                alt مسجّل مسبقاً
+                    ES-->>Page: خطأ "Already registered for this event"
+                else غير مسجّل
+                    Note over ES,TS: mode = resolveAttendanceMode(...)
+                    Note over ES,TS: hybrid: online أو in_person
+                    Note over ES,TS: capacity = capacityForMode(...)
+                    ES->>DB: COUNT registrations WHERE event_id AND status='confirmed' [AND attendance_mode=mode]
+                    DB-->>ES: العدد الحالي
+                    Note over ES,TS: isFull = count >= capacity
+                    alt isFull
+                        ES->>DB: INSERT registrations (status='waitlisted', attendance_mode=mode)
+                        DB-->>ES: التسجيل الجديد
+                        ES->>DB: SELECT waitlist position ORDER BY registered_at
+                        DB-->>ES: waitlistPosition
+                        ES->>NS: sendNotification(profile.user_id, "waitlist", ...)
+                        NS->>DB: INSERT notifications
+                        Note over ES,TS: waitlisted = true, position = N
+                    else السعة متاحة
+                        ES->>DB: INSERT registrations (status='confirmed', attendance_mode=mode)
+                        DB-->>ES: التسجيل
+                        ES->>TS: generateTicketForRegistration(registration, event.title, event.event_type)
+                        TS->>DB: SELECT tickets WHERE registration_id
+                        DB-->>TS: ticket | null
+                        TS->>DB: INSERT tickets (unique_code, qr_code_url, qr_payload, attendance_mode)
+                        DB-->>TS: التذكرة
+                        TS-->>ES: ticket
+                        ES->>NS: sendNotification(profile.user_id, "registration_confirmation", ...)
+                        NS->>DB: INSERT notifications
+                        Note over ES: waitlisted = false
+                    end
+                    ES->>Aud: syncRegistrantToAudience(attendeeId)
+                    Aud->>DB: SELECT/INSERT/UPDATE audience_contacts (best-effort)
+                    ES-->>Page: { registration, waitlisted, waitlistPosition? }
+                    alt waitlisted
+                        Page-->>Att: "Event is full — you are number N on the waiting list."
+                    else confirmed
+                        Page-->>Att: "Successfully registered! Check your dashboard for tickets."
+                    end
+                end
+            end
+        end
+    end
+
+    Note over Att,DB: 2) فعالية خاصة عبر رابط دعوة - الرمز إجباري
+    Att->>Page: يفتح /events/:id?code=...
+    Page->>ES: getEventById(eventId)
+    ES->>DB: SELECT events WHERE id AND deleted_at IS NULL
+    DB-->>ES: بيانات الحدث
+    ES-->>Page: event
+    Page->>IS: getLinkByCode(code)
+    IS->>DB: SELECT invitation_links WHERE code
+    DB-->>IS: link | null
+    IS-->>Page: link | null
+    alt link غير موجود أو link.event_id != eventId
+        Page-->>Att: خطأ "Invalid invitation link"
+    else link.used
+        Page-->>Att: خطأ "This invitation link has already been used"
+    else رابط صالح
+        Page->>ES: registerForEvent(eventId, attendeeId, code, attendanceMode)
+        ES->>DB: SELECT events (...)
+        DB-->>ES: بيانات الحدث
+        alt status != published
+            ES-->>Page: خطأ "This event is not open for registration"
+        else registration_deadline < now
+            ES-->>Page: خطأ "The registration deadline has passed"
+        else end_date < now
+            ES-->>Page: خطأ "This event has already ended"
+        else
+            ES->>DB: SELECT profiles (id, user_id, user:users(email))
+            DB-->>ES: الملف الشخصي
+            alt لا يوجد profile
+                ES-->>Page: خطأ "Profile not found"
+            else لا يوجد code
+                ES-->>Page: خطأ "An invitation code is required for this private event"
+            else link غير موجود
+                ES-->>Page: خطأ "Invalid invitation link"
+            else link.used
+                ES-->>Page: خطأ "This invitation link has already been used"
+            else link.event_id != eventId
+                ES-->>Page: خطأ "This invitation link does not belong to this event"
+            else بريد الحضور != link.email
+                ES-->>Page: خطأ "This invitation was sent to a different email address"
+            else الفحوصات الأساسية سليمة
+                ES->>Ban: checkBanForRegistration(userId, eventId, categoryId)
+                Ban->>DB: RPC bans_check_registration(session_token, eventId, categoryId)
+                DB-->>Ban: ban | null
+                Ban-->>ES: ban | null
+                alt يوجد حظر نشط
+                    ES-->>Page: خطأ "You cannot register for this event because of ..."
+                    Note over ES,TS: النطاق، المدة، السبب
+                else لا يوجد حظر
+                    ES->>DB: SELECT registrations WHERE event_id/attendee_id AND status != 'cancelled'
+                    DB-->>ES: التسجيل الحالي أو لا شيء
+                    alt مسجّل مسبقاً
+                        ES-->>Page: خطأ "Already registered for this event"
+                    else غير مسجّل
+                        Note over ES,TS: mode = resolveAttendanceMode(...)
+                        Note over ES,TS: capacity = capacityForMode(...)
+                        ES->>DB: COUNT registrations WHERE event_id AND status='confirmed' [AND attendance_mode=mode]
+                        DB-->>ES: العدد الحالي
+                        Note over ES,TS: isFull = count >= capacity
+                        alt isFull
+                            ES->>DB: INSERT registrations (status='waitlisted', attendance_mode=mode)
+                            DB-->>ES: التسجيل الجديد
+                            ES->>DB: SELECT waitlist position ORDER BY registered_at
+                            DB-->>ES: waitlistPosition
+                            ES->>NS: sendNotification(profile.user_id, "waitlist", ...)
+                            NS->>DB: INSERT notifications
+                        else السعة متاحة
+                            ES->>DB: INSERT registrations (status='confirmed', attendance_mode=mode)
+                            DB-->>ES: التسجيل
+                            ES->>TS: generateTicketForRegistration(registration, event.title, event.event_type)
+                            TS->>DB: INSERT tickets (unique_code, qr_code_url, qr_payload, attendance_mode)
+                            DB-->>TS: التذكرة
+                            TS-->>ES: ticket
+                            ES->>NS: sendNotification(profile.user_id, "registration_confirmation", ...)
+                            NS->>DB: INSERT notifications
+                        end
+                        ES->>Aud: syncRegistrantToAudience(attendeeId)
+                        Aud->>DB: SELECT/INSERT/UPDATE audience_contacts (best-effort)
+                        ES->>DB: SELECT invitation_links (id) WHERE code
+                        DB-->>ES: link
+                        ES->>IS: markLinkAsUsed(link.id)
+                        IS->>DB: UPDATE invitation_links SET used=true, used_at=now
+                        ES->>DB: SELECT events (organizer_id, title)
+                        DB-->>ES: event
+                        ES->>DB: SELECT profiles (user_id) WHERE id = organizer_id
+                        DB-->>ES: organizer profile
+                        ES->>NS: sendNotification(organizerUserId, "invitation_used", ...)
+                        NS->>DB: INSERT notifications
+                        ES-->>Page: { registration, waitlisted, waitlistPosition? }
+                        alt waitlisted
+                            Page-->>Att: "Event is full — you are number N on the waiting list."
+                        else confirmed
+                            Page-->>Att: "Successfully registered! Check your dashboard for tickets."
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    Note over Att,DB: 3) إلغاء التسجيل + ترقية قائمة الانتظار
+    Att->>Page: "إلغاء التسجيل"
+    Page->>ES: cancelRegistration(id)
+    ES->>DB: SELECT registrations (event_id, status, attendance_mode, event:events(event_type))
+    DB-->>ES: التسجيل
+    alt غير موجود
+        ES-->>Page: false
+    else موجود
+        ES->>DB: UPDATE registrations SET status='cancelled'
+        DB-->>ES: ok
+        alt status السابق = confirmed
+            ES->>DB: SELECT registrations WHERE event_id AND status='waitlisted' [AND attendance_mode=mode] ORDER BY registered_at LIMIT 1
+            DB-->>ES: أول مرشح أو لا شيء
+            alt يوجد مرشح
+                ES->>DB: UPDATE registrations SET status='confirmed'
+                Note over NS,DB: trigger_waitlist_promotion (AFTER UPDATE)
+                DB->>DB: INSERT notifications (type='waitlist_promotion')
+                ES->>DB: SELECT events (title, event_type)
+                DB-->>ES: event
+                ES->>TS: generateTicketForRegistration(promoted, title, event_type)
+                TS->>DB: SELECT/INSERT tickets (idempotent)
+                ES->>DB: SELECT profiles (user_id, first_name, last_name, user:users(email))
+                DB-->>ES: profile
+                ES->>NS: sendNotification(profile.user_id, "waitlist_promotion", ...)
+                NS->>DB: INSERT notifications
+                ES->>Mail: sendEmail(email, "You are confirmed for ...", ...) (best-effort)
+                Note over NS,Mail: بعد إشعار الـ trigger يرسل التطبيق إشعاراً إضافياً وبريداً
+            else لا يوجد مرشح
+                Note over ES: لا ترقية
+            end
+        else status السابق != confirmed
+            Note over ES,TS: لا ترقية - confirmed فقط
+        end
+        ES-->>Page: true
+        Page-->>Att: "Registration cancelled"
+    end
+
+    Note over Org,DB: 4) إنشاء دعوة - بواسطة المنظم
+    Org->>IM: يفتح صفحة إدارة الدعوات
+    IM->>IS: createLink(eventId, email)
+    IS->>DB: INSERT invitation_links (event_id, email, code = 12 حرفاً)
+    DB-->>IS: link
+    IS-->>IM: link
+    IM-->>Org: يعرض الرابط/الرمز
+    Note over Org,IM: المنظم ينسخ /events/:id?code=... ويشاركه يدوياً
+    Note over IM,IS: يوجد أيضاً createLinksBulk(...) لعدة مدعوين مع تجاهل المكرر
+    Note over IS,NS: createLink لا يرسل أي بريد أو إشعار

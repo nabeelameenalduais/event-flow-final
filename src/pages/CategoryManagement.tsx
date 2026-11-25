@@ -110,6 +110,7 @@ export function CategoryManagement() {
   )
 
   const handleDelete = async (cat: Category) => {
+    if (!window.confirm(t('Delete category "{name}"?', { name: cat.name }))) return
     try {
       await deleteCategory(cat.id)
       toast.success(t('"{name}" deleted', { name: cat.name }))

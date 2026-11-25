@@ -1,0 +1,638 @@
+---
+title: EventFlow — مخطط الفئات (Class Diagram)
+config:
+  theme: default
+  look: classic
+  layout: dagre
+  deterministicIds: true
+  deterministicIDSeed: eventflow-class
+  handDrawnSeed: 1
+---
+%% مصدر الحقيقة: src/types/index.ts + src/services/* + supabase/schema.sql +
+%% supabase/migrations/2026-11-06_all_additions.sql + ERD الأساسي (30 جدولاً).
+%% CoreEntities = 30 فئة تقابل الجداول الأساسية في ERD؛ كل علاقة FK/UNIQUE فعلية.
+%% SupportEntities = كيانات مساندة/app-level موجودة في النوع أو الهجرات، لا تُضاف لـ ERD.
+%% ServiceModules = وحدات خدمات فعلية (دوال مُصدّرة)، لا فئات OO بالمعنى الصارم.
+%% AppSettings تضمّن emailTemplates على مستوى التطبيق (بلا FK).
+%% User.passwordHash و DeviceSession.token و PasswordResetToken.token مغلقة عن العميل.
+classDiagram
+    direction LR
+
+    namespace CoreEntities {
+        class User {
+            <<entity>>
+            +id: string
+            +email: string
+            +passwordHash: string
+            +suspended: boolean
+            +mustChangePassword: boolean
+            +deletedAt: string
+            +scheduledDeletionAt: string
+            +deletedBy: string
+        }
+        class Role {
+            <<entity>>
+            +id: string
+            +name: RoleName
+            +description: string
+        }
+        class Profile {
+            <<entity>>
+            +id: string
+            +userId: string
+            +roleId: string
+            +firstName: string
+            +lastName: string
+            +managesAllEvents: boolean
+        }
+        class Category {
+            <<entity>>
+            +id: string
+            +name: string
+            +deletedAt: string
+        }
+        class Venue {
+            <<entity>>
+            +id: string
+            +name: string
+            +capacity: number
+            +facilities: Record
+            +imageUrls: string[]
+        }
+        class Event {
+            <<entity>>
+            +id: string
+            +title: string
+            +organizerId: string
+            +venueId: string
+            +categoryId: string
+            +capacity: number
+            +status: EventStatus
+            +visibility: EventVisibility
+            +eventType: EventType
+            +meetingLink: string
+            +onlineCapacity: number
+            +inPersonCapacity: number
+            +meetingProvider: string
+            +meetingAttendanceMinutes: number
+            +deletedAt: string
+        }
+        class EventImage {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +imageUrl: string
+        }
+        class Session {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +title: string
+            +startTime: string
+            +endTime: string
+            +roomName: string
+        }
+        class Speaker {
+            <<entity>>
+            +id: string
+            +sessionId: string
+            +name: string
+            +bio: string
+        }
+        class Registration {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +attendeeId: string
+            +registeredAt: string
+            +status: RegistrationStatus
+            +attendanceMode: AttendanceMode
+        }
+        class Ticket {
+            <<entity>>
+            +id: string
+            +registrationId: string
+            +uniqueCode: string
+            +qrPayload: string
+            +status: TicketStatus
+            +attendanceMode: AttendanceMode
+            +verifiedBy: string
+            +verifiedAt: string
+        }
+        class Attendance {
+            <<entity>>
+            +id: string
+            +ticketId: string
+            +checkInTime: string
+            +checkOutTime: string
+            +mode: AttendanceMode
+            +source: AttendanceSource
+            +verifiedBy: string
+            +presenceSeconds: number
+        }
+        class Feedback {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +attendeeId: string
+            +rating: number
+            +response: string
+            +submittedAt: string
+        }
+        class Notification {
+            <<entity>>
+            +id: string
+            +userId: string
+            +type: NotificationType
+            +message: string
+            +readAt: string
+            +link: string
+        }
+        class FileItem {
+            <<entity>>
+            +id: string
+            +name: string
+            +url: string
+            +uploadedBy: string
+        }
+        class AuditLog {
+            <<entity>>
+            +id: string
+            +userId: string
+            +action: AuditAction
+            +entityType: string
+            +entityId: string
+            +ipAddress: string
+        }
+        class InvitationLink {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +email: string
+            +code: string
+            +used: boolean
+            +usedAt: string
+        }
+        class EventOrganizer {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +userId: string
+            +isPrimary: boolean
+            +createdBy: string
+        }
+        class ChatChannel {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +channelType: ChatChannelType
+            +organizerId: string
+            +attendeeId: string
+        }
+        class ChatMessage {
+            <<entity>>
+            +id: string
+            +channelId: string
+            +senderId: string
+            +content: string
+        }
+        class Evaluation {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +title: string
+            +ratingType: RatingType
+            +privacy: EvaluationPrivacy
+            +createdBy: string
+        }
+        class EvaluationQuestion {
+            <<entity>>
+            +id: string
+            +evaluationId: string
+            +question: string
+            +questionType: EvaluationQuestionType
+            +options: string[]
+            +sortOrder: number
+        }
+        class EvaluationSubmission {
+            <<entity>>
+            +id: string
+            +evaluationId: string
+            +attendeeId: string
+            +rating: number
+            +isPublic: boolean
+        }
+        class EvaluationAnswer {
+            <<entity>>
+            +id: string
+            +submissionId: string
+            +questionId: string
+            +answer: string
+        }
+        class EventCost {
+            <<entity>>
+            +id: string
+            +eventId: string
+            +costType: CostType
+            +item: string
+            +quantity: number
+            +unitPrice: number
+            +createdBy: string
+            +updatedBy: string
+        }
+        class DeviceSession {
+            <<entity>>
+            +id: string
+            +userId: string
+            +deviceName: string
+            +token: string
+            +isCurrent: boolean
+            +lastActiveAt: string
+        }
+        class PasswordResetToken {
+            <<entity>>
+            +id: string
+            +userId: string
+            +token: string
+            +expiresAt: string
+            +usedAt: string
+        }
+        class AppSettings {
+            <<entity>>
+            +appName: string
+            +timezone: string
+            +dateFormat: string
+            +primaryColor: string
+            +logoUrl: string
+            +faviconUrl: string
+        }
+        class EmailTemplate {
+            <<entity>>
+            +id: string
+            +type: string
+            +subject: string
+            +body: string
+        }
+        class AuthAttempt {
+            <<entity>>
+            +id: string
+            +email: string
+            +attemptedAt: string
+        }
+    }
+
+    namespace SupportEntities {
+        class MeetingPresence {
+            <<support>>
+            +id: string
+            +eventId: string
+            +attendeeId: string
+            +totalSeconds: number
+            +attended: boolean
+        }
+        class MeetingChatMessage {
+            <<support>>
+            +id: string
+            +eventId: string
+            +senderId: string
+            +content: string
+        }
+        class AudienceContact {
+            <<support>>
+            +id: string
+            +email: string
+            +tags: string[]
+            +source: string
+            +status: AudienceContactStatus
+            +userId: string
+        }
+        class AudienceAccessGrant {
+            <<support>>
+            +id: string
+            +userId: string
+            +canView: boolean
+            +canEdit: boolean
+            +canSend: boolean
+            +expiresAt: string
+        }
+        class EmailCampaign {
+            <<support>>
+            +id: string
+            +name: string
+            +targetType: CampaignTargetType
+            +recipientStatus: RecipientStatusFilter
+            +status: CampaignStatus
+            +createdBy: string
+        }
+        class EmailCampaignRecipient {
+            <<support>>
+            +id: string
+            +campaignId: string
+            +contactId: string
+            +email: string
+            +status: string
+        }
+        class FundingSource {
+            <<support>>
+            +id: string
+            +name: string
+            +scope: FundingScope
+            +eventId: string
+            +currencyCode: string
+            +amountUsd: number
+        }
+        class Expense {
+            <<support>>
+            +id: string
+            +eventId: string
+            +fundingId: string
+            +currencyCode: string
+            +amountUsd: number
+            +status: ExpenseStatus
+        }
+        class FundTransfer {
+            <<support>>
+            +id: string
+            +fundingId: string
+            +type: string
+            +amountUsd: number
+            +toFundingId: string
+        }
+        class Currency {
+            <<support>>
+            +code: string
+            +name: string
+            +ratePerUsd: number
+            +ratePerYer: number
+            +isActive: boolean
+        }
+        class UserBan {
+            <<support>>
+            +id: string
+            +userId: string
+            +scope: BanScope
+            +status: BanStatus
+            +isPermanent: boolean
+            +approvedBy: string
+        }
+        class BanRevokeRequest {
+            <<support>>
+            +id: string
+            +banId: string
+            +status: string
+            +requestedBy: string
+        }
+        class EventRequest {
+            <<support>>
+            +id: string
+            +requesterId: string
+            +title: string
+            +eventType: EventType
+            +status: EventRequestStatus
+            +createdEventId: string
+        }
+        class AdminMessage {
+            <<support>>
+            +id: string
+            +title: string
+            +channel: AdminMessageChannel
+            +targetType: AdminMessageTarget
+            +status: CampaignStatus
+            +createdBy: string
+        }
+        class AdminMessageRecipient {
+            <<support>>
+            +id: string
+            +messageId: string
+            +userId: string
+            +email: string
+            +emailStatus: string
+        }
+        class PasswordOtpCode {
+            <<support>>
+            +id: string
+            +userId: string
+            +codeHash: string
+            +expiresAt: string
+            +attempts: number
+            +consumedAt: string
+        }
+        class PasswordResetRequestItem {
+            <<support>>
+            +id: string
+            +userId: string
+            +email: string
+            +status: string
+            +handledBy: string
+        }
+    }
+
+    namespace AppViews {
+        class ChatMessageWithSender {
+            <<view>>
+            +senderName: string
+            +senderRole: string
+        }
+        class AudienceAccess {
+            <<view>>
+            +canView: boolean
+            +canEdit: boolean
+            +canSend: boolean
+            +isAdmin: boolean
+        }
+        class FinanceSummary {
+            <<view>>
+            +totalFundingUsd: number
+            +balanceUsd: number
+            +byCurrency: array
+        }
+        class Attachment {
+            <<value>>
+            +name: string
+            +url: string
+            +size: number
+        }
+    }
+
+    namespace ServiceModules {
+        class AuthService {
+            <<service>>
+            +login()
+            +register()
+            +restoreSession()
+            +revokeSession()
+            +requestPasswordReset()
+            +resetPasswordWithToken()
+        }
+        class EventService {
+            <<service>>
+            +createEvent()
+            +updateEvent()
+            +publishEvent()
+            +archiveEvent()
+            +setDraft()
+            +registerForEvent()
+            +cancelRegistration()
+            +deleteRegistrationHard()
+        }
+        class TicketService {
+            <<service>>
+            +generateTicket()
+            +getTicketForOwner()
+            +downloadTicket()
+            +markTicketVerified()
+        }
+        class AttendanceService {
+            <<service>>
+            +checkIn()
+            +checkOut()
+            +findTicketByCode()
+            +findTicketByAttendee()
+            +markAutoAttendance()
+        }
+        class ChatService {
+            <<service>>
+            +ensureGeneralChannel()
+            +ensurePrivateChannel()
+            +sendMessage()
+        }
+        class EvaluationService {
+            <<service>>
+            +createEvaluation()
+            +submitEvaluation()
+            +getSubmissions()
+            +getStats()
+        }
+        class NotificationService {
+            <<service>>
+            +sendNotification()
+            +listForUser()
+            +markAsRead()
+        }
+        class EmailService {
+            <<service>>
+            +sendEmail()
+            +getEmailProvider()
+            +getEmailModeLabel()
+        }
+        class UserService {
+            <<service>>
+            +listUsers()
+            +suspendUser()
+            +activateUser()
+            +updateProfile()
+        }
+        class MeetingService {
+            <<service>>
+            +generateMeetingLink()
+            +isMeetingLinkVisible()
+        }
+        class ReportService {
+            <<service>>
+            +getDashboardStats()
+            +exportEventReport()
+        }
+        class SettingsService {
+            <<service>>
+            +getSettings()
+            +updateSettings()
+            +listEmailTemplates()
+        }
+        class SupportServices {
+            <<service>>
+            +syncRegistrantToAudience()
+            +createCampaign()
+            +createFundingSource()
+            +checkBanForRegistration()
+        }
+    }
+
+    %% --- Core FK / UNIQUE relationships (42, matching the authoritative ERD) ---
+    CoreEntities.User "1" --> "0..1" CoreEntities.Profile : user_id UNIQUE
+    CoreEntities.User "1" --> "0..*" CoreEntities.User : deleted_by
+    CoreEntities.Role "1" --> "0..*" CoreEntities.Profile : role_id
+    CoreEntities.Category "1" --> "0..*" CoreEntities.Event : category_id
+    CoreEntities.Venue "1" --> "0..*" CoreEntities.Event : venue_id
+    CoreEntities.Profile "1" --> "0..*" CoreEntities.Event : organizer_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.Event : meeting_link_generated_by
+    CoreEntities.Event "1" --> "0..*" CoreEntities.EventImage : event_id
+    CoreEntities.Event "1" --> "0..*" CoreEntities.Session : event_id
+    CoreEntities.Session "1" --> "0..*" CoreEntities.Speaker : session_id
+    CoreEntities.Event "1" --> "0..*" CoreEntities.Registration : event_id
+    CoreEntities.Profile "1" --> "0..*" CoreEntities.Registration : attendee_id
+    CoreEntities.Registration "1" --> "0..1" CoreEntities.Ticket : registration_id UNIQUE
+    CoreEntities.Ticket "1" --> "0..*" CoreEntities.Attendance : ticket_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.Ticket : verified_by
+    CoreEntities.User "1" --> "0..*" CoreEntities.Attendance : verified_by
+    CoreEntities.Event "1" --> "0..*" CoreEntities.Feedback : event_id
+    CoreEntities.Profile "1" --> "0..*" CoreEntities.Feedback : attendee_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.Notification : user_id
+    CoreEntities.Profile "1" --> "0..*" CoreEntities.FileItem : uploaded_by
+    CoreEntities.User "1" --> "0..*" CoreEntities.AuditLog : user_id
+    CoreEntities.Event "1" --> "0..*" CoreEntities.InvitationLink : event_id
+    CoreEntities.Event "1" --> "0..*" CoreEntities.EventOrganizer : event_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.EventOrganizer : user_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.EventOrganizer : created_by
+    CoreEntities.Event "1" --> "0..*" CoreEntities.ChatChannel : event_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.ChatChannel : organizer_id
+    CoreEntities.Profile "1" --> "0..*" CoreEntities.ChatChannel : attendee_id
+    CoreEntities.ChatChannel "1" --> "0..*" CoreEntities.ChatMessage : channel_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.ChatMessage : sender_id
+    CoreEntities.Event "1" --> "0..*" CoreEntities.Evaluation : event_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.Evaluation : created_by
+    CoreEntities.Evaluation "1" --> "0..*" CoreEntities.EvaluationQuestion : evaluation_id
+    CoreEntities.Evaluation "1" --> "0..*" CoreEntities.EvaluationSubmission : evaluation_id
+    CoreEntities.Profile "1" --> "0..*" CoreEntities.EvaluationSubmission : attendee_id
+    CoreEntities.EvaluationSubmission "1" --> "0..*" CoreEntities.EvaluationAnswer : submission_id
+    CoreEntities.EvaluationQuestion "1" --> "0..*" CoreEntities.EvaluationAnswer : question_id
+    CoreEntities.Event "1" --> "0..*" CoreEntities.EventCost : event_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.EventCost : created_by
+    CoreEntities.User "1" --> "0..*" CoreEntities.EventCost : updated_by
+    CoreEntities.User "1" --> "0..*" CoreEntities.DeviceSession : user_id
+    CoreEntities.User "1" --> "0..*" CoreEntities.PasswordResetToken : user_id
+
+    %% --- Support / app-level relationships ---
+    CoreEntities.Event "1" --> "0..*" SupportEntities.MeetingPresence : event_id
+    CoreEntities.Profile "1" --> "0..*" SupportEntities.MeetingPresence : attendee_id
+    CoreEntities.Event "1" --> "0..*" SupportEntities.MeetingChatMessage : event_id
+    CoreEntities.User "0..1" --> "0..*" SupportEntities.AudienceContact : userId nullable
+    CoreEntities.User "1" --> "0..*" SupportEntities.AudienceAccessGrant : user_id
+    SupportEntities.EmailCampaign "1" --> "0..*" SupportEntities.EmailCampaignRecipient : campaign_id
+    CoreEntities.Event "0..1" --> "0..*" SupportEntities.EmailCampaign : target_event_id
+    SupportEntities.FundingSource "1" --> "0..*" SupportEntities.Expense : funding_id
+    SupportEntities.Currency "1" --> "0..*" SupportEntities.FundingSource : currency_code
+    SupportEntities.Currency "1" --> "0..*" SupportEntities.Expense : currency_code
+    CoreEntities.Event "0..1" --> "0..*" SupportEntities.Expense : event_id
+    SupportEntities.FundTransfer "0..*" --> "1" SupportEntities.FundingSource : funding_id
+    SupportEntities.UserBan "1" --> "0..*" SupportEntities.BanRevokeRequest : ban_id
+    CoreEntities.Event "0..1" --> "0..*" SupportEntities.UserBan : event_id
+    SupportEntities.EventRequest "0..1" --> "0..1" CoreEntities.Event : created_event_id
+    SupportEntities.AdminMessage "1" --> "0..*" SupportEntities.AdminMessageRecipient : message_id
+    CoreEntities.Event "0..1" --> "0..*" SupportEntities.AdminMessage : event_id
+    CoreEntities.User "1" --> "0..*" SupportEntities.PasswordOtpCode : user_id
+    CoreEntities.User "0..1" --> "0..*" SupportEntities.PasswordResetRequestItem : user_id
+    CoreEntities.User "0..1" --> "0..*" SupportEntities.PasswordResetRequestItem : handled_by
+    CoreEntities.ChatMessage <|-- AppViews.ChatMessageWithSender : extends
+    AppViews.AudienceAccess ..> SupportEntities.AudienceAccessGrant : grant
+    AppViews.FinanceSummary ..> SupportEntities.Currency : byCurrency
+
+    %% --- Service dependencies on domain classes ---
+    ServiceModules.AuthService ..> CoreEntities.User : uses
+    ServiceModules.AuthService ..> CoreEntities.DeviceSession : uses
+    ServiceModules.EventService ..> CoreEntities.Event : uses
+    ServiceModules.EventService ..> CoreEntities.Registration : uses
+    ServiceModules.TicketService ..> CoreEntities.Ticket : uses
+    ServiceModules.AttendanceService ..> CoreEntities.Attendance : uses
+    ServiceModules.ChatService ..> CoreEntities.ChatChannel : uses
+    ServiceModules.ChatService ..> CoreEntities.ChatMessage : uses
+    ServiceModules.EvaluationService ..> CoreEntities.Evaluation : uses
+    ServiceModules.NotificationService ..> CoreEntities.Notification : uses
+    ServiceModules.EmailService ..> CoreEntities.EmailTemplate : uses
+    ServiceModules.UserService ..> CoreEntities.Profile : uses
+    ServiceModules.MeetingService ..> SupportEntities.MeetingPresence : uses
+    ServiceModules.ReportService ..> CoreEntities.EventCost : uses
+    ServiceModules.SettingsService ..> CoreEntities.AppSettings : uses
+    ServiceModules.SupportServices ..> SupportEntities.AudienceContact : sync
+    ServiceModules.SupportServices ..> SupportEntities.EmailCampaign : uses
+    ServiceModules.SupportServices ..> SupportEntities.FundingSource : uses
+    ServiceModules.SupportServices ..> SupportEntities.UserBan : uses

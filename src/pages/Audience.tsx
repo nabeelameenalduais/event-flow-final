@@ -54,9 +54,15 @@ export function Audience() {
       const rows = await getContacts(search)
       setContacts(rows)
       if (permission.isAdmin) {
-        const [grantRows, userRows] = await Promise.all([getAccessGrants(), getUsers({ pageSize: 300 })])
+        const [grantRows, userResult] = await Promise.all([
+          getAccessGrants(),
+          getUsers({ pageSize: 300 }).catch((err) => {
+            console.error("Failed to load users for audience access panel", err)
+            return null
+          }),
+        ])
         setGrants(grantRows)
-        setUsers(userRows.items)
+        if (userResult) setUsers(userResult.items)
       }
     } catch (err) {
       toast.error(localizeToast(err instanceof Error ? err.message : "Failed to load the audience"))
@@ -77,8 +83,8 @@ export function Audience() {
           { key: "name", label: t("Name") },
           { key: "email", label: t("Email") },
           { key: "phone", label: t("Phone") },
-          { key: "tags", label: "Tags" },
-          { key: "source", label: "Source" },
+          { key: "tags", label: t("Tags") },
+          { key: "source", label: t("Source") },
           { key: "status", label: t("Status") },
         ],
         rows: contacts.map((c) => ({ ...c, tags: c.tags.join(", ") })),
@@ -190,7 +196,7 @@ export function Audience() {
                     <TableCell className="text-sm text-muted-foreground capitalize">{contact.source}</TableCell>
                     <TableCell>
                       <Badge variant={contact.status === "subscribed" ? "default" : contact.status === "deleted_account" ? "destructive" : "outline"}>
-                        {contact.status.replace("_", " ")}
+                        {t(contact.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -216,7 +222,7 @@ export function Audience() {
                           )}
                           {access.isAdmin && (
                             <Button size="sm" variant="ghost" className="text-destructive" onClick={async () => {
-                              if (!window.confirm("Delete this contact permanently?")) return
+                              if (!window.confirm(t("Delete this contact permanently?"))) return
                               await deleteContact(contact.id)
                               toast.success(t("Contact deleted"))
                               load()
@@ -438,7 +444,7 @@ function GrantPanel({
             <label className="block text-xs font-medium mb-1">{t("Expires (optional)")}</label>
             <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
           </div>
-          <Button type="submit" disabled={saving}>{saving ? "Granting..." : t("Grant access")}</Button>
+          <Button type="submit" disabled={saving}>{saving ? t("Granting...") : t("Grant access")}</Button>
         </form>
 
         {grants.length > 0 && (

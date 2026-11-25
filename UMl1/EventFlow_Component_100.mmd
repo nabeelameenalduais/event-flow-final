@@ -1,0 +1,116 @@
+%%{init: {'theme': 'neutral', 'flowchart': {'nodeSpacing': 35, 'rankSpacing': 60, 'curve': 'basis'}}}%%
+flowchart LR
+  subgraph CLIENT["مكوّنات العميل — المتصفح (SPA)"]
+    direction TB
+    PL["PresentationLayer\nصفحات + مكوّنات مشتركة"]
+    AUTHUI["AuthComponent\nAuthContext + ProtectedRoute/PublicRoute + RBAC"]
+    CHATUI["ChatComponent\nقنوات المحادثة + واجهة Realtime"]
+    ASSIST["AssistantComponent\nuseChat + حلقة الأدوات الست"]
+    QRS["QRScanner\nhtml5-qrcode"]
+    CTX["Contexts\nLanguage + Theme + Settings"]
+  end
+
+  subgraph SERVICES["مكوّنات طبقة الخدمات (Repository)"]
+    direction TB
+    AUTHS["AuthService\nlogin/register/restoreSession/revokeSession/password reset"]
+    EVENTS["EventService\nCRUD + publish/archive/duplicate + sessions/speakers\nregister/cancel/waitlist + feedback + قواعد الحضور"]
+    TICKETS["TicketService\ngenerateTicket + getTicket... + markTicketVerified + downloadTicket"]
+    ATTS["AttendanceService\ncheckIn/checkOut + findTicketByCode + markAutoAttendance"]
+    CHATS["ChatService\nقنوات + رسائل + Realtime"]
+    EVALS["EvaluationService\nاستبيان + submit_evaluation RPC"]
+    USERSEC["UserSecurityServices\nuser/account/passwordReset/deviceSession/ban/audit"]
+    EVENTSUP["EventSupportServices\ninvitation/cost/feedback/organizer/category/venue/meeting/eventRequest"]
+    COMMS["CommsFinanceServices\nnotification/email/campaign/adminMessage/audience/finance/reports/export/settings/dashboard"]
+  end
+
+  subgraph LIB["مكوّنات البنية التحتية (lib/utils)"]
+    direction TB
+    DAL["DataAccessComponent\nSupabaseClient + assistant REST tools"]
+    RL["RateLimitComponent\n30 req/60s — login/register فقط"]
+    ERR["FallbackComponent\nPGRST202 / PGRST205 / 42P01"]
+    I18N["i18n/runtimeLocale\ntranslate/plural/formatters/localizeError"]
+    TCODE["ticketCode\ngenerateUniqueCode + buildTicketPayload\nencode/decode/verifyTicketPayload"]
+    ACCESS["eventAccess\ncanManageEvent + isOrganizerOfEvent"]
+  end
+
+  subgraph BACKEND["مكوّنات الواجهة الخلفية — Supabase"]
+    direction TB
+    PG["PostgresComponent\n30 ERD + 17 مساند + RLS + قيود + فهارس"]
+    RPC["RPCComponent\n45 دالة SECURITY DEFINER"]
+    RT["RealtimeComponent\npostgres_changes"]
+    STORAGE["StorageComponent\nbucket: uploads"]
+    EDGE["ChatbotFunction (Edge)\nمسار بديل غير مستخدم من الواجهة"]
+    TRIG["TriggerComponents\ntrigger_waitlist_promotion\ntrigger_auto_assign_organizers"]
+    TEMPL["email_templates\nقوالب البريد في AppSettings"]
+    EMAIL["EmailComponent\nmock / Resend / SendGrid"]
+  end
+
+  subgraph EXT["أنظمة خارجية"]
+    direction TB
+    LM["LM Studio\nالمسار الفعلي عبر /lmstudio"]
+    CAM["كاميرا الجهاز\nإدخال فيديو"]
+    PROVIDERS["Resend / SendGrid\nإرسال بريد اختياري"]
+    OPENROUTER["OpenRouter\nلدالة Edge البديلة فقط"]
+  end
+
+  PL --> AUTHUI
+  PL --> CHATUI
+  PL --> EVENTS
+  PL --> TICKETS
+  PL --> ATTS
+  PL --> EVALS
+  PL --> USERSEC
+  PL --> EVENTSUP
+  PL --> COMMS
+  PL --> QRS
+  PL --> ACCESS
+  PL --> CTX
+  CTX -.-> PL
+
+  AUTHUI --> AUTHS
+  AUTHUI --> USERSEC
+  CHATUI --> CHATS
+  CHATUI --> ASSIST
+  QRS --> ATTS
+  QRS --> CAM
+
+  AUTHS --> RL
+  AUTHS --> ERR
+  EVENTS --> DAL
+  TICKETS --> TCODE
+  TICKETS --> I18N
+  ATTS --> TCODE
+  EVALS --> ERR
+  USERSEC --> ERR
+  EVENTSUP --> ERR
+  COMMS --> ERR
+
+  AUTHS --> DAL
+  EVENTS --> DAL
+  TICKETS --> DAL
+  ATTS --> DAL
+  CHATS --> DAL
+  EVALS --> DAL
+  USERSEC --> DAL
+  EVENTSUP --> DAL
+  COMMS --> DAL
+
+  ASSIST -->|"REST tools (anon key)"| DAL
+  ASSIST -->|"HTTP POST /lmstudio/v1/chat/completions"| LM
+  CHATUI -.->|"مسار بديل غير مستخدم"| EDGE
+  EDGE -->|"service-role key"| PG
+  EDGE -->|"HTTP chat/completions"| OPENROUTER
+
+  COMMS --> EMAIL
+  COMMS --> TEMPL
+  EMAIL -.->|"اختياري"| PROVIDERS
+
+  DAL -->|"HTTPS + publishable/anon key (PostgREST)"| PG
+  DAL -->|"rpc(...)"| RPC
+  DAL -->|"subscribe (postgres_changes)"| RT
+  DAL -->|"upload/download"| STORAGE
+  RPC --> PG
+  RT --> PG
+  STORAGE --> PG
+  TRIG --> PG
+  ACCESS --> DAL

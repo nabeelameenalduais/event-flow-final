@@ -2,15 +2,17 @@ import { supabase } from "../lib/supabase"
 import type { AppSettings, EmailTemplate } from "../types"
 
 export async function getSettings(): Promise<AppSettings> {
-  const { data: settings } = await supabase
+  const { data: settings, error: settingsError } = await supabase
     .from("app_settings")
     .select("*")
     .limit(1)
-    .single()
+    .maybeSingle()
+  if (settingsError) throw settingsError
 
-  const { data: templates } = await supabase
+  const { data: templates, error: templatesError } = await supabase
     .from("email_templates")
     .select("*")
+  if (templatesError) throw templatesError
 
   if (!settings) {
     return {
@@ -47,14 +49,16 @@ export async function updateSettings(data: Partial<AppSettings>): Promise<AppSet
   if (data.logoUrl !== undefined) payload.logo_url = data.logoUrl
   if (data.faviconUrl !== undefined) payload.favicon_url = data.faviconUrl
 
-  const { data: settingsId } = await supabase
+  const { data: settingsId, error: settingsIdError } = await supabase
     .from("app_settings")
     .select("id")
     .limit(1)
-    .single()
-  if (settingsId) {
-    await supabase.from("app_settings").update(payload).eq("id", settingsId.id)
-  }
+    .maybeSingle()
+  if (settingsIdError) throw settingsIdError
+  if (!settingsId) throw new Error("Settings record not found")
+
+  const { error: updateError } = await supabase.from("app_settings").update(payload).eq("id", settingsId.id)
+  if (updateError) throw updateError
 
   return getSettings()
 }

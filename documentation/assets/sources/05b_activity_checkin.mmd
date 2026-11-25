@@ -1,0 +1,44 @@
+---
+title: EventFlow — نشاط التحقق من الدخول (Check-in) بالكاميرا أو يدويًا
+---
+%% Source: src/services/attendanceService.ts (checkIn, findTicketByCode,
+%%        checkOut, markAutoAttendance), صفحات Check-in و QrScanner.
+
+flowchart TD
+    Start([بداية: حضور عند البوابة]) --> Mode{طريقة الفحص؟}
+    Mode -- كاميرا --> Scan[قراءة QR عبر html5-qrcode] --> GetCode
+    Mode -- يدوي --> Manual[إدخال الكود يدويًا] --> GetCode[الحصول على unique_code]
+
+    GetCode --> Lookup[findTicketByCode / checkIn]
+
+    Lookup --> T1{تذكرة موجودة؟}
+    T1 -->|لا| ErrNF[رفض: «Ticket not found» / «No ticket found»] --> Retry{إعادة فحص؟}
+    T1 -->|نعم| T2{حالة التذكرة؟}
+
+    T2 -- used --> ErrUsed[رفض: «Ticket already checked in»] --> Retry
+    T2 -- invalid --> ErrInv[رفض: تذكرة غير صالحة] --> Retry
+    T2 -- valid --> T3{حالة التسجيل = confirmed؟}
+    T3 -->|لا| ErrReg[رفض: «Registration is not confirmed»] --> Retry
+    T3 -->|نعم| MarkUsed["UPDATE tickets SET status = 'used'"]
+    MarkUsed --> AttInsert["INSERT attendance (check_in_time = now)"]
+    AttInsert --> Audit[logAction: checkin]
+    Audit --> ShowOk[عرض «تم الدخول بنجاح» أخضر] --> CheckOut{سيغادر لاحقًا؟}
+    CheckOut -->|نعم| Out["لاحقًا: checkOut => check_out_time"] --> Done([انتهى: سجل حضور كامل])
+    CheckOut -->|لا| Done
+
+    Retry -->|نعم| Mode
+    Retry -->|لا| GiveUp([انتهى: حُرم الدخول])
+
+    subgraph Auto[مسار الفعاليات أونلاين]
+        Start2([فتح رابط الاجتماع]) --> FindT[findTicketByAttendee]
+        FindT --> A1{توجد تذكرة مؤكدة؟}
+        A1 -->|لا| NoAct[لا تسجيل حضور]
+        A1 -->|نعم| A2{سجل حضور سابق؟}
+        A2 -->|نعم| NoAct
+        A2 -->|لا| MarkUsed2["UPDATE tickets = used"] --> InsAtt["INSERT attendance (idempotent)"] --> NoAct
+    end
+
+    classDef fail fill:#ffdddd,stroke:#cc0000
+    classDef ok fill:#ddffdd,stroke:#008800
+    class ErrNF,ErrUsed,ErrInv,ErrReg fail
+    class ShowOk,Done,NoAct ok

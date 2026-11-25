@@ -91,7 +91,7 @@ export function Finance() {
       {summary && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat title={t("Total funding")} value={formatMoney(summary.totalFundingUsd, "USD")} hint={t("Consolidated in USD")} />
-          <Stat title={t("Approved expenses")} value={formatMoney(summary.approvedExpensesUsd, "USD")} hint={`${formatMoney(summary.pendingExpensesUsd, "USD")} pending`} />
+          <Stat title={t("Approved expenses")} value={formatMoney(summary.approvedExpensesUsd, "USD")} hint={`${formatMoney(summary.pendingExpensesUsd, "USD")} ${t("pending")}`} />
           <Stat title={t("Balance")} value={formatMoney(summary.balanceUsd, "USD")} hint={t("Funding − approved expenses − transfers")} />
           <Stat title={t("General / event")} value={`${formatMoney(summary.generalFundingUsd, "USD")} / ${formatMoney(summary.eventFundingUsd, "USD")}`} hint={t("Pool split")} />
         </div>
@@ -130,7 +130,7 @@ export function Finance() {
                         <TableCell className="font-medium text-sm">{f.name}</TableCell>
                         <TableCell className="text-sm">{f.funderName || "—"}</TableCell>
                         <TableCell className="text-sm">
-                          {f.scope === "general" ? t("General pool") : events.find((e) => e.id === f.eventId)?.title ?? f.scope}
+                          {f.scope === "general" ? t("General pool") : events.find((e) => e.id === f.eventId)?.title ?? t(f.scope === "project" ? "Project" : f.scope)}
                         </TableCell>
                         <TableCell className="text-sm">{formatMoney(f.amount, f.currencyCode)}</TableCell>
                         <TableCell className="text-sm">{formatMoney(f.amountUsd, "USD")}</TableCell>
@@ -168,10 +168,10 @@ export function Finance() {
                       <TableRow key={expense.id}>
                         <TableCell>
                           <p className="text-sm font-medium">{expense.purpose}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{t(expense.category.replace("_", " "))}{expense.attachments.length > 0 ? ` · ${expense.attachments.length} attachment(s)` : ""}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{t(expense.category.replace("_", " "))}{expense.attachments.length > 0 ? ` · ${expense.attachments.length} ${t("attachment(s)")}` : ""}</p>
                         </TableCell>
                         <TableCell className="text-sm">{expense.beneficiary}</TableCell>
-                        <TableCell className="text-sm">{events.find((e) => e.id === expense.eventId)?.title ?? "General"}</TableCell>
+                        <TableCell className="text-sm">{events.find((e) => e.id === expense.eventId)?.title ?? t("General")}</TableCell>
                         <TableCell className="text-sm">
                           {formatMoney(expense.amount, expense.currencyCode)}
                           <span className="block text-xs text-muted-foreground">≈ {formatMoney(expense.amountUsd, "USD")}</span>
@@ -488,7 +488,7 @@ function ExpenseForm({ currencies, events, funding, userId, onSaved }: { currenc
             </select>
             <select value={category} onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm capitalize">
-              {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{t(c)}</option>)}
             </select>
           </div>
           <div className="grid sm:grid-cols-3 gap-3">
